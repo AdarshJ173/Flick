@@ -1,23 +1,28 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { LivePulse } from "@/components/flick/live-pulse";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
   component: AuthPage,
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = useSearch({ from: "/auth" });
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const postAuthTarget = redirect && redirect.startsWith("/") ? redirect : "/home";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,7 +33,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin + "/home",
+            emailRedirectTo: window.location.origin + postAuthTarget,
             data: { display_name: name || email.split("@")[0] },
           },
         });
@@ -38,7 +43,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/home" });
+      navigate({ to: postAuthTarget as "/home" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -49,13 +54,23 @@ function AuthPage() {
   async function handleGoogle() {
     setBusy(true);
     try {
+      const target = window.location.origin + postAuthTarget;
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/home",
+        redirect_uri: target,
       });
-      if (result.error)
-        throw result.error instanceof Error ? result.error : new Error(String(result.error));
+      if (result.error) {
+        // Fallback: try the Supabase client directly. If Google is enabled in
+        // the Supabase dashboard this will succeed even if Lovable's wrapper
+        // is unavailable.
+        const { error: fallbackError } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: target },
+        });
+        if (fallbackError) throw fallbackError;
+        return;
+      }
       if (result.redirected) return;
-      navigate({ to: "/home" });
+      navigate({ to: postAuthTarget as "/home" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
       setBusy(false);
@@ -77,7 +92,7 @@ function AuthPage() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="flex items-center gap-2">
-            <LivePulse size={10} />
+            <img src="/tlogo.svg" className="h-6 w-6 object-contain" alt="Flick Logo" />
             <span className="text-xs font-mono tracking-[0.18em] uppercase text-muted-foreground">
               Flick
             </span>

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, Heart, User, Camera, Sparkles } from "lucide-react";
+import { Check, Heart, User, Camera, Sparkles, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/setup")({
@@ -11,7 +11,14 @@ export const Route = createFileRoute("/setup")({
 });
 
 import { FlickAvatar } from "@/components/flick/avatar";
+import { AvatarPicker } from "@/components/flick/avatar-picker";
 import { cn } from "@/lib/utils";
+import {
+  DEFAULT_DICEBEAR_STYLE,
+  dicebearUrl,
+  isDicebearUrl,
+  type DicebearStyle,
+} from "@/lib/avatars";
 
 const INTEREST_OPTIONS = [
   "GATE",
@@ -60,18 +67,17 @@ function ProfileSetupPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState("gradient-2");
+  const [emoji, setEmoji] = useState(() => dicebearUrl("flick", DEFAULT_DICEBEAR_STYLE));
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [vibe, setVibe] = useState("");
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // DPDP Consent and age gate state
-  const [consentLocation, setConsentLocation] = useState(false);
-  const [consentProfile, setConsentProfile] = useState(false);
+  // Step 1: lightweight age + community-guidelines confirm.
+  // No ID, no OTP, no DigiLocker. The trust signal in Flick is behavioural
+  // (account age + kept-in-touch count), not identity.
   const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [birthDate, setBirthDate] = useState("");
-  const [digiLockerLoading, setDigiLockerLoading] = useState(false);
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -81,22 +87,22 @@ function ProfileSetupPage() {
         return;
       }
       setUserId(data.user.id);
-      // Pre-fill profile name if exists
       const { data: p } = await supabase
         .from("profiles")
-        .select(
-          "display_name,avatar_emoji,vibe,dpdp_consent_location,dpdp_consent_profile,age_verified,birth_date",
-        )
+        .select("display_name,avatar_emoji,vibe,age_verified")
         .eq("id", data.user.id)
         .maybeSingle();
       if (p) {
         setName(p.display_name || "");
-        setEmoji(p.avatar_emoji || "gradient-2");
+        if (p.avatar_emoji && isDicebearUrl(p.avatar_emoji)) {
+          setEmoji(p.avatar_emoji);
+        } else if (p.avatar_emoji && (p.avatar_emoji as string).startsWith("gradient-")) {
+          setEmoji(p.avatar_emoji);
+        } else {
+          setEmoji(dicebearUrl(p.display_name || "flick"));
+        }
         setVibe(p.vibe || "");
-        setConsentLocation(!!(p as any).dpdp_consent_location);
-        setConsentProfile(!!(p as any).dpdp_consent_profile);
         setAgeConfirmed(!!(p as any).age_verified);
-        setBirthDate((p as any).birth_date || "");
       }
     })();
   }, [navigate]);
@@ -109,39 +115,10 @@ function ProfileSetupPage() {
     }
   };
 
-  // DigiLocker Aadhaar Verification
-  const verifyAgeWithDigiLocker = async () => {
-    if (!birthDate) {
-      toast.error("Please select your birth date first");
-      return;
-    }
-    const bDate = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - bDate.getFullYear();
-    const m = today.getMonth() - bDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < bDate.getDate())) {
-      age--;
-    }
-
-    if (age < 18) {
-      toast.error(
-        `Verification Failed: You are declared as ${age} years old. Under DPDP Act Section 9, processing minors without parental consent is prohibited. You must be 18+ to use Flick.`,
-      );
-      return;
-    }
-
-    setDigiLockerLoading(true);
-    // Simulate real DigiLocker credentials verification lookup delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setDigiLockerLoading(false);
-    setAgeConfirmed(true);
-    toast.success("Aadhaar age verification succeeded via DigiLocker!");
-  };
-
   const handleSaveProfile = async () => {
     if (!userId) return;
-    if (!consentLocation || !consentProfile || !ageConfirmed) {
-      toast.error("Consent and age verification are required for legal compliance.");
+    if (!ageConfirmed || !guidelinesAccepted) {
+      toast.error("Please confirm the two checkboxes to continue.");
       return;
     }
     setLoading(true);
@@ -153,10 +130,6 @@ function ProfileSetupPage() {
         vibe: vibe.trim() || null,
         interests: selectedInterests,
         age_verified: ageConfirmed,
-        birth_date: birthDate || null,
-        dpdp_consent_location: consentLocation,
-        dpdp_consent_profile: consentProfile,
-        dpdp_consent_timestamp: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
       if (error) throw error;
@@ -205,99 +178,59 @@ function ProfileSetupPage() {
                   <Sparkles className="h-6 w-6" />
                 </div>
                 <h1 className="font-display text-3xl leading-none tracking-tight">
-                  DPDP Safety & Age Verification
+                  Welcome to Flick
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  In compliance with the India Digital Personal Data Protection (DPDP) Act, please
-                  declare your age and authorize data processing consents below.
+                  Two quick things before we set up your profile. No ID, no OTP — we trust
+                  behaviour, not paperwork.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-surface p-4 space-y-4">
-                {/* Age confirm */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                      1. Confirm 18+ Age
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">Section 9 Compliance</span>
-                  </div>
-                  <input
-                    type="date"
-                    value={birthDate}
-                    onChange={(e) => {
-                      setBirthDate(e.target.value);
-                      setAgeConfirmed(false);
-                    }}
-                    className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs text-foreground focus:border-primary/50 focus:outline-none"
-                  />
-                  <button
-                    onClick={verifyAgeWithDigiLocker}
-                    disabled={digiLockerLoading || !birthDate || ageConfirmed}
-                    className={cn(
-                      "no-tap w-full h-11 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition active:scale-95",
-                      ageConfirmed
-                        ? "bg-primary/20 border-primary/20 text-primary"
-                        : "bg-surface border-border text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {digiLockerLoading
-                      ? "Connecting DigiLocker..."
-                      : ageConfirmed
-                        ? "✓ Verified with DigiLocker"
-                        : "Verify Age with DigiLocker (Aadhaar)"}
-                  </button>
-                </div>
-
-                <div className="h-px bg-border/50" />
-
-                {/* Consent 1 */}
+              <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
                 <label className="flex gap-3 cursor-pointer items-start">
                   <input
                     type="checkbox"
-                    checked={consentLocation}
-                    onChange={(e) => setConsentLocation(e.target.checked)}
-                    className="mt-0.5 accent-primary h-4 w-4"
+                    checked={ageConfirmed}
+                    onChange={(e) => setAgeConfirmed(e.target.checked)}
+                    className="mt-0.5 accent-primary h-4 w-4 shrink-0"
                   />
                   <div className="space-y-0.5">
                     <div className="text-xs font-semibold text-foreground">
-                      Spatial Location Consent
+                      I confirm I am 18 years or older.
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      Authorize Flick to process your GPS coordinates to display nearby matches
-                      within a 2km range. Coordinate data is ephemeral and is not stored
-                      permanently.
+                      Flick is only for adults. By continuing you affirm this.
                     </p>
                   </div>
                 </label>
 
-                {/* Consent 2 */}
+                <div className="h-px bg-border/50" />
+
                 <label className="flex gap-3 cursor-pointer items-start">
                   <input
                     type="checkbox"
-                    checked={consentProfile}
-                    onChange={(e) => setConsentProfile(e.target.checked)}
-                    className="mt-0.5 accent-primary h-4 w-4"
+                    checked={guidelinesAccepted}
+                    onChange={(e) => setGuidelinesAccepted(e.target.checked)}
+                    className="mt-0.5 accent-primary h-4 w-4 shrink-0"
                   />
                   <div className="space-y-0.5">
                     <div className="text-xs font-semibold text-foreground">
-                      Granular Profile Data Consent
+                      I agree to the Community Guidelines.
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      Authorize Flick to host your display name, vibe text, interest tags, and
-                      linked verification signals. You can request complete deletion of this profile
-                      at any time.
+                      Be respectful. Don't share contact info before Keep-in-touch. Block and report
+                      anything off.
                     </p>
                   </div>
                 </label>
               </div>
 
               <button
-                disabled={!consentLocation || !consentProfile || !ageConfirmed}
+                disabled={!ageConfirmed || !guidelinesAccepted}
                 onClick={() => setStep(2)}
                 className="no-tap flex h-14 w-full items-center justify-center rounded-2xl bg-primary font-semibold text-primary-foreground transition active:scale-[0.98] disabled:opacity-50"
               >
-                Accept & Proceed
+                Continue
               </button>
             </motion.div>
           )}
@@ -347,39 +280,22 @@ function ProfileSetupPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ duration: 0.35 }}
-              className="w-full max-w-xs space-y-6"
+              className="w-full max-w-sm space-y-6"
             >
               <div className="space-y-2 text-center">
                 <h1 className="font-display text-4xl leading-none tracking-tight">
-                  Pick your <span className="italic text-primary">avatar vibe</span>
+                  Pick your <span className="italic text-primary">avatar</span>
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Choose a premium color scheme for your profile avatar.
+                  Choose a style. Shuffle until it feels like you.
                 </p>
               </div>
 
-              <FlickAvatar
-                emoji={emoji}
+              <AvatarPicker
+                initialUrl={isDicebearUrl(emoji) ? emoji : null}
                 name={name}
-                className="mx-auto h-28 w-28 rounded-3xl text-4xl"
+                onChange={(url) => setEmoji(url)}
               />
-
-              <div className="grid grid-cols-3 gap-3 justify-center max-w-xs mx-auto px-1 py-2">
-                {EMOJI_CHOICES.map((e) => (
-                  <button
-                    key={e}
-                    onClick={() => setEmoji(e)}
-                    className={cn(
-                      "no-tap relative transition active:scale-95",
-                      e === emoji
-                        ? "ring-4 ring-primary/40 ring-offset-2 ring-offset-background rounded-2xl"
-                        : "",
-                    )}
-                  >
-                    <FlickAvatar emoji={e} name={name} className="h-14 w-14 rounded-2xl text-lg" />
-                  </button>
-                ))}
-              </div>
 
               <button
                 onClick={() => setStep(4)}

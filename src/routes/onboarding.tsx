@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LivePulse } from "@/components/flick/live-pulse";
 import { ShieldCheck, MapPin, Bell, ChevronRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,7 +40,7 @@ function OnboardingPage() {
       {/* Top Header */}
       <header className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <LivePulse size={8} />
+          <img src="/tlogo.svg" className="h-5 w-5 object-contain" alt="Flick Logo" />
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Flick
           </span>

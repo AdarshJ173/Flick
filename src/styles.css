@@ -112,14 +112,63 @@
     text-rendering: optimizeLegibility;
     overscroll-behavior-y: none;
   }
-  /* Mobile-first: respect notches */
+  /* Mobile-first: respect notches but only at the top — horizontal padding is set
+     by individual app shells. Safe-area-bottom is handled at component level so
+     the bottom nav can offset itself without affecting main scroll area. */
   body {
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-      env(safe-area-inset-left);
+    padding-top: max(env(safe-area-inset-top), 0px);
   }
   ::selection {
     background: oklch(0.92 0.2 122 / 35%);
     color: var(--color-foreground);
+  }
+}
+
+/* Responsive layout tokens.
+   Breakpoints used in this app:
+   - mobile:  320 → 430px (default — designed for portrait phones)
+   - tablet:  768 → 1023px (2-column layouts: settings sidebar, chat threads)
+   - desktop: 1024px+   (max-w-2xl gutters) */
+@layer utilities {
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .safe-left {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+  .safe-right {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+  .safe-x {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+  .safe-y {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Helper: content container that's mobile-constrained but expands on tablet/desktop */
+  .container-page {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 28rem; /* 448px on mobile */
+  }
+  @media (min-width: 768px) {
+    .container-page {
+      max-width: 48rem; /* 768px on tablet */
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-page {
+      max-width: 56rem; /* 896px on desktop */
+    }
   }
 }
 
@@ -206,3 +255,88 @@
 @utility animate-float-up {
   animation: float-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@utility radar-loader {
+  border: 1px solid var(--color-border);
+  box-shadow: 0 25px 75px rgba(0, 0, 0, 0.45);
+}
+
+@utility radar-sweep {
+  animation: radar-sweep-animation 3s linear infinite;
+}
+
+@utility radar-sweep-cone {
+  background: var(--color-primary);
+  opacity: 0.18;
+  transform: rotate(-55deg);
+  filter: blur(25px) drop-shadow(15px 15px 15px var(--color-primary));
+}
+
+@keyframes radar-sweep-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@utility animating-live-glow {
+  animation: dynamic-glow 3s ease-in-out infinite;
+}
+
+@keyframes dynamic-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-primary) 25%, transparent),
+      0 0 30px -8px color-mix(in oklab, var(--color-primary) 40%, transparent),
+      0 0 60px -12px color-mix(in oklab, var(--color-primary) 20%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1.5px color-mix(in oklab, var(--color-primary) 40%, transparent),
+      0 0 45px -4px color-mix(in oklab, var(--color-primary) 65%, transparent),
+      0 0 90px -6px color-mix(in oklab, var(--color-primary) 35%, transparent);
+  }
+}
+
+@keyframes shimmer-arrows {
+  0%, 100% {
+    opacity: 0.25;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(2.5px);
+  }
+}
+
+@keyframes metallic-shine {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+  }
+  50%, 100% {
+    transform: translateX(200%) skewX(-25deg);
+  }
+}
+
+@utility premium-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.08) 42%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.08) 58%,
+    rgba(255, 255, 255, 0) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: metallic-shine 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+

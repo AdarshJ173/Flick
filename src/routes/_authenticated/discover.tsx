@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/flick/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { intentByKey } from "@/lib/intents";
-import { Compass, MapPin, Flame, Users, Hand } from "lucide-react";
+import { Compass, MapPin, Users, Hand } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { FlickAvatar } from "@/components/flick/avatar";
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: DiscoverPage,
@@ -79,7 +80,7 @@ function DiscoverPage() {
       const { data: signalsOwners } = await supabase
         .from("signals")
         .select(
-          "id, user_id, profiles(display_name, avatar_emoji, photo_verified, linkedin_url, instagram_url, website_url, age_verified)",
+          "id, user_id, profiles(display_name, avatar_emoji, vibe, photo_verified, linkedin_url, instagram_url, website_url, age_verified)",
         )
         .in(
           "id",
@@ -185,20 +186,30 @@ function DiscoverPage() {
         <header className="flex items-end justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Compass
-                className="h-4 w-4 text-primary animate-spin"
-                style={{ animationDuration: "12s" }}
-              />
-              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                Radar
+              <img src="/tlogo.svg" className="h-5 w-5 object-contain" alt="Flick Logo" />
+              <span className="font-display font-semibold text-[15px] tracking-tight text-foreground">
+                Flick
               </span>
+              <div className="flex items-center gap-1.5 ml-1 rounded-full bg-surface-2 border border-border px-2 py-0.5">
+                <Compass
+                  className="h-3 w-3 text-primary animate-spin"
+                  style={{ animationDuration: "12s" }}
+                />
+                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                  Radar
+                </span>
+              </div>
             </div>
             <h1 className="font-display mt-2 text-4xl leading-none tracking-tight">
               Live <span className="italic text-primary">signals</span>.
             </h1>
           </div>
           <div className="flex items-center gap-1 bg-surface-2 border border-border px-3 py-1 rounded-full text-xs text-muted-foreground font-mono">
-            <Flame className="h-3.5 w-3.5 text-warm animate-pulse" />
+            <img
+              src="/activedot.svg"
+              className="h-3.5 w-3.5 object-contain animate-pulse"
+              alt="Active"
+            />
             <span>{activeCount} active</span>
           </div>
         </header>
@@ -217,70 +228,80 @@ function DiscoverPage() {
           </div>
         ) : (
           <>
-            {/* Ambient High-Contrast Radar Map Grid Visualizer */}
-            <div className="relative mt-8 aspect-square w-full rounded-[36px] bg-surface-2 border border-border/40 overflow-hidden flex items-center justify-center">
-              {/* Radar Circles */}
-              <div className="absolute h-[85%] w-[85%] rounded-full border border-border/10" />
-              <div className="absolute h-[60%] w-[60%] rounded-full border border-border/10" />
-              <div className="absolute h-[35%] w-[35%] rounded-full border border-border/10" />
+            {/* High-Contrast Radar Map Grid Visualizer - Uncontained, centered & fully responsive */}
+            <div className="flex-1 flex items-center justify-center py-2">
+              <div className="relative w-full max-w-[340px] aspect-square flex items-center justify-center">
+                <div className="radar-loader relative w-full h-full rounded-full border border-border/25 flex items-center justify-center">
+                  {/* Centered Ambient Radial Glow (static, true glow) */}
+                  <div
+                    className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(203,248,62,0.22)_0%,rgba(203,248,62,0.06)_35%,transparent_70%)] pointer-events-none animate-pulse"
+                    style={{ animationDuration: "4s" }}
+                  />
 
-              {/* Cross lines */}
-              <div className="absolute h-full w-[1px] bg-border/5" />
-              <div className="absolute w-full h-[1px] bg-border/5" />
+                  {/* Concentric dashed circles */}
+                  <div className="absolute inset-[16%] rounded-full border border-dashed border-border/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] pointer-events-none" />
+                  <div className="absolute inset-[32%] rounded-full border border-dashed border-border/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] pointer-events-none" />
+                  <div className="absolute inset-[48%] rounded-full border border-dashed border-border/10 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] pointer-events-none" />
+                  <div className="absolute inset-[64%] rounded-full border border-dashed border-border/15 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] pointer-events-none" />
+                  <div className="absolute inset-[80%] rounded-full border border-dashed border-border/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] pointer-events-none" />
 
-              {/* Glowing user position center */}
-              <div className="absolute z-10 flex h-6 w-6 items-center justify-center">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-primary/20 opacity-75" />
-                <span className="relative h-2.5 w-2.5 rounded-full bg-primary shadow-lg shadow-primary" />
-              </div>
+                  {/* Cross lines (axes) */}
+                  <div className="absolute h-full w-[1px] bg-border/5 pointer-events-none" />
+                  <div className="absolute w-full h-[1px] bg-border/5 pointer-events-none" />
 
-              {/* Radar Sweep Line */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-                className="absolute top-1/2 left-1/2 w-1/2 h-[1px] bg-gradient-to-r from-primary/30 to-transparent origin-left"
-                style={{ transformOrigin: "0 0" }}
-              />
+                  {/* Center dot position - glowing center */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex h-6 w-6 items-center justify-center pointer-events-none">
+                    <span className="absolute h-full w-full animate-ping rounded-full bg-primary/20 opacity-75" />
+                    <span className="relative h-2.5 w-2.5 rounded-full bg-primary shadow-lg shadow-primary" />
+                  </div>
 
-              {/* Hotspot Markers mapped using distance ratios */}
-              {signals
-                .filter((s) => !s.is_mine)
-                .map((spot) => {
-                  const angle = getAngleFromId(spot.id);
-                  // Calculate radius ratio (max search radius is 2000m)
-                  const radiusRatio = Math.min(1.0, spot.distance_m / 2000);
-                  const latOffset = Math.sin(angle) * radiusRatio;
-                  const lngOffset = Math.cos(angle) * radiusRatio;
+                  {/* Sweeper Hand with electric lime sweep line */}
+                  <div className="radar-sweep absolute top-1/2 left-1/2 w-1/2 h-1/2 origin-top-left pointer-events-none">
+                    <div className="absolute top-0 left-0 w-full h-[1.5px] border-t border-dashed border-primary" />
+                  </div>
 
-                  return (
-                    <button
-                      key={spot.id}
-                      onClick={() => setSelectedSignal(spot)}
-                      className="absolute z-20 group transition duration-300"
-                      style={{
-                        top: `${50 + latOffset * 40}%`,
-                        left: `${50 + lngOffset * 40}%`,
-                      }}
-                    >
-                      <div className="relative flex items-center justify-center">
-                        <span className="absolute h-8 w-8 rounded-full bg-warm/20 animate-pulse-ring" />
-                        <div
-                          className={cn(
-                            "flex h-8 w-8 items-center justify-center rounded-xl text-xs transition duration-200 border",
-                            selectedSignal?.id === spot.id
-                              ? "bg-warm text-warm-foreground border-warm scale-110 shadow-lg"
-                              : "bg-surface border-border text-foreground hover:scale-105",
-                          )}
+                  {/* Hotspot Markers mapped using distance ratios */}
+                  {signals
+                    .filter((s) => !s.is_mine)
+                    .map((spot) => {
+                      const angle = getAngleFromId(spot.id);
+                      // Calculate radius ratio (max search radius is 2000m)
+                      const radiusRatio = Math.min(1.0, spot.distance_m / 2000);
+                      // Multiply by 42 to make sure they fit comfortably inside the circle boundary
+                      const latOffset = Math.sin(angle) * radiusRatio;
+                      const lngOffset = Math.cos(angle) * radiusRatio;
+
+                      return (
+                        <button
+                          key={spot.id}
+                          onClick={() => setSelectedSignal(spot)}
+                          className="absolute z-20 group transition duration-300"
+                          style={{
+                            top: `${50 + latOffset * 42}%`,
+                            left: `${50 + lngOffset * 42}%`,
+                          }}
                         >
-                          {(() => {
-                            const intentObj = intentByKey(spot.intent);
-                            return <intentObj.icon className="h-4.5 w-4.5" />;
-                          })()}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                          <div className="relative flex items-center justify-center">
+                            <span className="absolute h-8 w-8 rounded-full bg-warm/20 animate-pulse-ring" />
+                            <div
+                              className={cn(
+                                "flex h-8 w-8 items-center justify-center rounded-xl text-xs transition duration-200 border",
+                                selectedSignal?.id === spot.id
+                                  ? "bg-warm text-warm-foreground border-warm scale-110 shadow-lg"
+                                  : "bg-surface border-border text-foreground hover:scale-105",
+                              )}
+                            >
+                              {(() => {
+                                const intentObj = intentByKey(spot.intent);
+                                return <intentObj.icon className="h-4.5 w-4.5" />;
+                              })()}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
             </div>
 
             {/* Selected Venue Bottom Drawer Details */}
@@ -295,11 +316,19 @@ function DiscoverPage() {
                     transition={{ duration: 0.3 }}
                     className="rounded-3xl border border-border bg-surface p-5 space-y-4 shadow-sm"
                   >
-                    <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start gap-3">
+                      <FlickAvatar
+                        emoji={(selectedSignal as any).avatar_emoji || "gradient-2"}
+                        name={(selectedSignal as any).display_name || "Someone"}
+                        className={cn(
+                          "h-14 w-14 shrink-0 rounded-2xl text-lg shadow-sm",
+                          (selectedSignal as any).photo_verified ? "live-glow" : "",
+                        )}
+                      />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-display text-2xl leading-none whitespace-nowrap overflow-hidden text-ellipsis">
-                            Open to {intentByKey(selectedSignal.intent).label.toLowerCase()}
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-display truncate text-2xl leading-none">
+                            {(selectedSignal as any).display_name || "Someone"}
                           </h3>
                           {/* Trust Badge Tier representation */}
                           {(() => {
@@ -330,7 +359,16 @@ function DiscoverPage() {
                             );
                           })()}
                         </div>
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          {(() => {
+                            const intentObj = intentByKey(selectedSignal.intent);
+                            return <intentObj.icon className="h-3.5 w-3.5 shrink-0" />;
+                          })()}
+                          <span className="truncate">
+                            Open to {intentByKey(selectedSignal.intent).label.toLowerCase()}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           <span>
                             {selectedSignal.distance_m < 250
@@ -342,46 +380,47 @@ function DiscoverPage() {
                                   : "1km - 2km away"}
                           </span>
                         </div>
-                        {selectedSignal.note && (
-                          <p className="mt-3 text-sm text-foreground/80 italic line-clamp-2">
-                            "{selectedSignal.note}"
-                          </p>
-                        )}
+                      </div>
+                    </div>
 
-                        {/* Social verifications panel */}
-                        <div className="mt-4 rounded-xl bg-surface-2 p-3 space-y-2 text-xs">
-                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold block">
-                            Identity & Verifications
-                          </span>
-                          <div className="flex flex-wrap gap-2">
+                    {selectedSignal.note && (
+                      <p className="text-sm text-foreground/85 italic line-clamp-2">
+                        "{selectedSignal.note}"
+                      </p>
+                    )}
+
+                    {/* Social verifications panel */}
+                    <div className="rounded-xl bg-surface-2 p-3 space-y-2 text-xs">
+                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold block">
+                        Identity & Verifications
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded border text-[10px]",
+                            (selectedSignal as any).photo_verified
+                              ? "text-primary border-primary/20 bg-primary/10"
+                              : "text-muted-foreground border-border",
+                          )}
+                        >
+                          {(selectedSignal as any).photo_verified
+                            ? "✓ Liveness Passed"
+                            : "✗ Face Unverified"}
+                        </span>
+                        {[
+                          (selectedSignal as any).linkedin_url && "LinkedIn",
+                          (selectedSignal as any).instagram_url && "Instagram",
+                          (selectedSignal as any).website_url && "Website",
+                        ]
+                          .filter(Boolean)
+                          .map((plat) => (
                             <span
-                              className={cn(
-                                "px-2 py-0.5 rounded border text-[10px]",
-                                (selectedSignal as any).photo_verified
-                                  ? "text-primary border-primary/20 bg-primary/10"
-                                  : "text-muted-foreground border-border",
-                              )}
+                              key={plat}
+                              className="px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px]"
                             >
-                              {(selectedSignal as any).photo_verified
-                                ? "✓ Liveness Passed"
-                                : "✗ Face Unverified"}
+                              ✓ {plat}
                             </span>
-                            {[
-                              (selectedSignal as any).linkedin_url && "LinkedIn",
-                              (selectedSignal as any).instagram_url && "Instagram",
-                              (selectedSignal as any).website_url && "Website",
-                            ]
-                              .filter(Boolean)
-                              .map((plat) => (
-                                <span
-                                  key={plat}
-                                  className="px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px]"
-                                >
-                                  ✓ {plat}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
+                          ))}
                       </div>
                     </div>
 

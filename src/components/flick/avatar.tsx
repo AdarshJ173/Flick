@@ -1,24 +1,14 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { dicebearUrl, isDicebearUrl } from "@/lib/avatars";
 
 const GRADIENTS = {
-  "gradient-1": {
-    colors: ["#F43F5E", "#F97316"],
-  },
-  "gradient-2": {
-    colors: ["#4F46E5", "#7C3AED"],
-  },
-  "gradient-3": {
-    colors: ["#10B981", "#14B8A6"],
-  },
-  "gradient-4": {
-    colors: ["#06B6D4", "#3B82F6"],
-  },
-  "gradient-5": {
-    colors: ["#EC4899", "#E11D48"],
-  },
-  "gradient-6": {
-    colors: ["#F59E0B", "#EA580C"],
-  },
+  "gradient-1": { colors: ["#F43F5E", "#F97316"] },
+  "gradient-2": { colors: ["#4F46E5", "#7C3AED"] },
+  "gradient-3": { colors: ["#10B981", "#14B8A6"] },
+  "gradient-4": { colors: ["#06B6D4", "#3B82F6"] },
+  "gradient-5": { colors: ["#EC4899", "#E11D48"] },
+  "gradient-6": { colors: ["#F59E0B", "#EA580C"] },
 };
 
 export function FlickAvatar({
@@ -30,8 +20,74 @@ export function FlickAvatar({
   name: string;
   className?: string;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const useImg = isDicebearUrl(emoji) && !imgFailed;
+
+  if (useImg) {
+    return (
+      <div
+        className={cn(
+          "relative overflow-hidden flex items-center justify-center select-none shadow-xl border border-white/10 bg-surface-2",
+          className,
+        )}
+      >
+        <img
+          src={emoji}
+          alt={name || "avatar"}
+          loading="lazy"
+          decoding="async"
+          onError={() => setImgFailed(true)}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <GradientAvatar
+      emoji={emoji}
+      name={name}
+      className={className}
+      fallbackUrl={imgFailed ? dicebearUrl(name || "flick") : undefined}
+    />
+  );
+}
+
+function GradientAvatar({
+  emoji,
+  name,
+  className,
+  fallbackUrl,
+}: {
+  emoji: string;
+  name: string;
+  className?: string;
+  fallbackUrl?: string;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
   const theme = GRADIENTS[emoji as keyof typeof GRADIENTS] || GRADIENTS["gradient-2"];
   const initial = (name || "S").charAt(0).toUpperCase();
+  const showFallbackImg = !!fallbackUrl && !imgFailed;
+
+  if (showFallbackImg) {
+    return (
+      <div
+        className={cn(
+          "relative overflow-hidden flex items-center justify-center select-none shadow-xl border border-white/10 bg-surface-2",
+          className,
+        )}
+      >
+        <img
+          src={fallbackUrl}
+          alt={name || "avatar"}
+          loading="lazy"
+          decoding="async"
+          onError={() => setImgFailed(true)}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -40,7 +96,6 @@ export function FlickAvatar({
         className,
       )}
     >
-      {/* Background SVG representing glassmorphic abstract shapes */}
       <svg
         className="absolute inset-0 w-full h-full"
         viewBox="0 0 100 100"
@@ -53,11 +108,7 @@ export function FlickAvatar({
             <stop offset="100%" stopColor={theme.colors[1]} />
           </linearGradient>
         </defs>
-
-        {/* Base Gradient Layer */}
         <rect width="100" height="100" fill={`url(#grad-${emoji})`} />
-
-        {/* Abstract Glassmorphic Overlay Shapes */}
         {emoji === "gradient-1" && (
           <>
             <circle cx="30" cy="30" r="28" fill="white" fillOpacity="0.12" />
@@ -159,11 +210,7 @@ export function FlickAvatar({
           </>
         )}
       </svg>
-
-      {/* Glassmorphic border glow reflection */}
       <div className="absolute inset-0.5 rounded-[inherit] bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-
-      {/* Styled letter in front */}
       <span className="relative z-10 font-display text-[0.45em] tracking-tight font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
         {initial}
       </span>

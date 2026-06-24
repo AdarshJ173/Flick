@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -68,10 +69,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no",
       },
-      { name: "theme-color", content: "#caff33" },
+      { name: "theme-color", content: "#1a1d24" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      // Opaque black status bar (was `black-translucent`) — matches the midnight
+      // background so the OS bar blends in. Combined with `viewport-fit=cover`
+      // the app extends edge-to-edge under the status bar.
+      { name: "apple-mobile-web-app-status-bar-style", content: "black" },
       { name: "apple-mobile-web-app-title", content: "Flick" },
       { title: "Flick — Be here. Find people." },
       {
@@ -86,7 +90,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/svg+xml", href: "/tlogo.svg" },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -101,6 +107,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+/*
+  Responsive breakpoints used across the app:
+   - mobile:  320 → 430px (default — designed for portrait phones, iPhone SE up to Pro Max)
+   - tablet:  768 → 1023px (2-column layouts, sidebar + content, .container-page expands to 48rem)
+   - desktop: 1024px+      (max-w-2xl gutters, .container-page expands to 56rem)
+  Layouts use the `container-page` utility (see styles.css) so every page
+  remains 28rem on phones and grows gracefully above 768px.
+*/
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -114,8 +128,6 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
-import { supabase } from "@/integrations/supabase/client";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -131,6 +143,19 @@ function RootComponent() {
       subscription.unsubscribe();
     };
   }, [router]);
+
+  // Register the service worker for PWA install + offline shell.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+    const onLoad = () => {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.warn("[PWA] service worker registration failed:", err);
+      });
+    };
+    if (document.readyState === "complete") onLoad();
+    else window.addEventListener("load", onLoad, { once: true });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
