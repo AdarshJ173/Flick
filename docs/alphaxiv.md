@@ -20,7 +20,7 @@ Your two documents are excellent. They are also operating inside the wrong causa
 
 **The actual evidence**: Chronic loneliness is primarily a **cognitive distortion problem**. The landmark meta-analysis by Masi, Chen, Hawkley & Cacioppo (2011), covering interventions across the lifespan, found that of four intervention strategies tested — enhancing social skills, providing social support, increasing social opportunities, and addressing maladaptive cognition — **addressing maladaptive social cognition produced the largest effect sizes** in randomized controlled studies. Not opportunity. Not skill. Not support. **Cognition**.
 
-A 2025 systematic review and meta-analysis in *BMC Psychology* confirms this: CBT targeting cognitive reappraisal is the most consistent evidence-based intervention for loneliness. A second 2025 meta-analysis of 280 studies (APA) corroborates this ranking.
+A 2025 systematic review and meta-analysis in _BMC Psychology_ confirms this: CBT targeting cognitive reappraisal is the most consistent evidence-based intervention for loneliness. A second 2025 meta-analysis of 280 studies (APA) corroborates this ranking.
 
 What this means for product design: **most social apps are solving the wrong problem for the worst-affected users**. Let that land before continuing.
 
@@ -44,7 +44,7 @@ flowchart LR
     F --> A
 ```
 
-The lonely brain does something paradoxical: it simultaneously *wants* connection more intensely AND becomes *more defensive* against it. Feeling socially isolated increases the explicit desire to reconnect while also producing an implicit hypervigilance for social threats. This is not metaphorical — it shows up in EEG data, in cortisol profiles, in attentional bias studies. Lonely people literally process social information differently.
+The lonely brain does something paradoxical: it simultaneously _wants_ connection more intensely AND becomes _more defensive_ against it. Feeling socially isolated increases the explicit desire to reconnect while also producing an implicit hypervigilance for social threats. This is not metaphorical — it shows up in EEG data, in cortisol profiles, in attentional bias studies. Lonely people literally process social information differently.
 
 **Critical implication**: A lonely person who downloads Flick, sees a mutual match, and meets a stranger at a coffee shop will, with high probability in the chronic loneliness population, **misinterpret that interaction as threatening or rejecting**, even when it's objectively neutral or positive. The encounter confirms their worst expectations. The loop deepens. The app experience is subjectively negative. Churn.
 
@@ -66,6 +66,7 @@ Coan's research demonstrates that the human brain evolved with the **default ass
 ### What CBT Actually Targets
 
 The most effective loneliness interventions (CBT) work by teaching people to:
+
 1. Notice when they're applying the threat hypervigilance filter
 2. Generate alternative, non-threatening interpretations of ambiguous social cues
 3. Behaviorally test those alternatives (exposure)
@@ -81,9 +82,9 @@ Strip away the tech and ask: **what primitive evolutionary hunger did each unloc
 
 **Facebook** (2004): Did not invent social networking. Solved something else entirely — it gave people **tribal status visibility**. Humans evolved in groups of 150 where everyone's social position was known to everyone else. Facebook recreated the small-tribe social ledger at internet scale. The like button, friend count, activity feed — these are tribal status currency made visible and gamified. The dopamine hit of a Facebook notification is the same neurological pathway as being recognized by your chief. It mapped directly onto deep tribal belonging circuitry.
 
-**iPhone** (2007): Did not invent smartphones. Solved the **touch-object manipulation interface** problem. Humans are tactile primates. The gesture interface removed the last cognitive barrier between the hand's natural manipulation instincts and digital objects. The smooth glass + haptic feedback + touch-direct interaction was the first device that felt like an extension of the body rather than an external tool. It was the first piece of consumer electronics that felt like *using your hands to grab something real*.
+**iPhone** (2007): Did not invent smartphones. Solved the **touch-object manipulation interface** problem. Humans are tactile primates. The gesture interface removed the last cognitive barrier between the hand's natural manipulation instincts and digital objects. The smooth glass + haptic feedback + touch-direct interaction was the first device that felt like an extension of the body rather than an external tool. It was the first piece of consumer electronics that felt like _using your hands to grab something real_.
 
-**ChatGPT** (2022): Did not invent AI. Solved the **patient intelligence** problem. The revolutionary thing about ChatGPT isn't that it's smart — it's that it gives you something no human can give you: **infinite patient attention, always focused on exactly you, never bored, never distracted, never needing anything in return**. The primitive hunger it addresses is the hunger to feel *truly, completely heard and engaged with* — the hunger that most human relationships only partially satisfy. This is also why it's the most dangerous technology for loneliness in history.
+**ChatGPT** (2022): Did not invent AI. Solved the **patient intelligence** problem. The revolutionary thing about ChatGPT isn't that it's smart — it's that it gives you something no human can give you: **infinite patient attention, always focused on exactly you, never bored, never distracted, never needing anything in return**. The primitive hunger it addresses is the hunger to feel _truly, completely heard and engaged with_ — the hunger that most human relationships only partially satisfy. This is also why it's the most dangerous technology for loneliness in history.
 
 **The Pattern**: Every transformative consumer technology addresses **a single primitive hunger that was previously unscalable**. Status (Facebook). Touch (iPhone). Being-heard (ChatGPT).
 
@@ -104,11 +105,13 @@ Here is the direct challenge to your entire document set:
 **Loneliness is a health vital sign. We have no consumer-grade measurement or intervention for it.**
 
 Compare it to blood pressure:
+
 - Blood pressure is invisible, asymptomatic in early stages, measurable, and predictive of catastrophic outcomes
 - We built an entire industry (monitoring, medication, behavioral intervention) around it once we understood it as a measurable vital sign
 - The consumer adoption of blood pressure monitors happened because people internalized that this invisible signal mattered
 
 Loneliness has the same profile:
+
 - Invisible until crisis
 - Measurable (but not currently measured in consumer products)
 - Predictive of mortality with 26-32% excess risk — stronger predictive power than many clinical biomarkers
@@ -124,13 +127,13 @@ This is not "loneliness SaaS." This is the **social health category**, and it do
 
 ### What the Evidence Shows Works (Ranked)
 
-| Intervention Type | Effect Size (RCT-based) | What It Targets | Currently Scaled? |
-|---|---|---|---|
-| **Maladaptive cognition (CBT)** | Largest in RCTs | The hypervigilance perception loop | Almost nowhere |
-| **Behavioral activation** | High | Avoidance behavior | No consumer product |
-| **Social skill building** | Moderate | Competence gap | A few apps, poorly done |
-| **Increasing social opportunities** | Small in RCTs | Supply of encounters | Every social app ever built |
-| **Social support provision** | Small | Emotional buffering | Most wellbeing apps |
+| Intervention Type                   | Effect Size (RCT-based) | What It Targets                    | Currently Scaled?           |
+| ----------------------------------- | ----------------------- | ---------------------------------- | --------------------------- |
+| **Maladaptive cognition (CBT)**     | Largest in RCTs         | The hypervigilance perception loop | Almost nowhere              |
+| **Behavioral activation**           | High                    | Avoidance behavior                 | No consumer product         |
+| **Social skill building**           | Moderate                | Competence gap                     | A few apps, poorly done     |
+| **Increasing social opportunities** | Small in RCTs           | Supply of encounters               | Every social app ever built |
+| **Social support provision**        | Small                   | Emotional buffering                | Most wellbeing apps         |
 
 **The entire SaaS social connection industry has been building in the bottom two rows — the rows with the weakest evidence — while the top rows remain unproductized.**
 
@@ -159,24 +162,28 @@ The revolutionary opportunity is not a better presence-signaling app. It's a com
 Here's what that looks like:
 
 **Layer 1: The Social Health Score**
+
 - Passive measurement of Dunbar layer health (frequency, quality, reciprocity of contact across your inner/middle/outer circles)
 - Based on communication pattern analysis (with consent), event data, self-report with behavioral validation
 - A single number that people actually understand and want to improve — like a credit score for your relational life
 - This is the consumer hook: people check their cholesterol, their sleep score, their HRV. They will check their social health score when they understand what it means for their longevity.
 
 **Layer 2: The Cognitive Retraining Engine**
+
 - Identifies which cognitive patterns are driving isolation (threat hypervigilance, negative attribution, avoidance cycles)
 - Delivers CBT-derived micro-interventions (2-5 minutes) calibrated to the specific distortion
 - Measures behavioral change, not just subjective report
 - This is the moat: proprietary behavioral data on what cognitive interventions actually change social outcomes
 
 **Layer 3: The Action Prescription Layer**
+
 - Specific behavioral prescriptions ("you haven't had a deep conversation with [X] in 47 days — here's a conversation starter calibrated to your relationship history")
 - Graduated exposure challenges (not "go meet strangers" but "extend this interaction by 90 seconds")
 - Social prescription integration (connects with real-world venues, activities, therapists)
 - This is where Flick-style mechanics live — but as prescription layer, not primary product
 
 **Layer 4: The Health System Integration**
+
 - The social health score as a clinical metric (insurance, primary care, elder care)
 - B2B via HR/wellness (employers already know isolation kills productivity)
 - Government/public health (UK, Japan, Australia all spending heavily on loneliness)
@@ -203,22 +210,27 @@ This is not the next Facebook. It's something more durable: it's the company tha
 Your documents treat Flick's design principles as settled. They're not. Let me stress-test them:
 
 **"Mutual-match invisibility reduces vulnerability cost"**
+
 - True for mildly isolated people. False for chronically lonely people, who will interpret even a mutual match as threatening once they're face-to-face. The vulnerability isn't in the matching phase; it's in the interaction phase that follows.
 - Confidence: High (Cacioppo hypervigilance research)
 
 **"Ephemerality reduces stakes"**
+
 - Partially true. But the encounter is not ephemeral to the lonely person's cognitive loop. Every interaction that ends awkwardly updates their social threat model negatively. The ephemerality of the app record doesn't erase the memory or its cognitive impact.
 - Confidence: High
 
 **"Plausible deniability for wanting connection"**
+
 - This is the strongest design insight in the entire document. It's genuinely correct and evidence-backed (social norms research confirms the admission cost of loneliness is a real barrier). But it solves the initiation problem, not the interaction quality problem.
 - Confidence: High that it helps with initiation; Low that it helps with outcomes for chronic sufferers
 
 **"Cold start via local density"**
+
 - This is operationally true and strategically critical. Tinder USC party is the correct playbook. But local density creates a numbers problem: if your target user is lonely and the cold-start population is also lonely (because who else downloads a connection app?), you've filled your early user base with people who have the hypervigilance problem, and initial interactions will be more awkward than average, poisoning the product reputation.
 - This is the hidden cold-start problem nobody mentions.
 
 **"Success = less app usage"**
+
 - Noble. But structurally in tension with the venture capital model that will fund it. Every investor wants DAU growth. This principle is only sustainable if the B2B revenue model is so strong that consumer DAU is a vanity metric rather than a core commercial indicator. This requires the B2B layer to be built earlier than most social apps build it.
 - Confidence: High that the tension is real; Unclear on resolution
 
@@ -256,7 +268,7 @@ What Facebook, Apple, ChatGPT, Duolingo, Uber all have in common that is NOT in 
 
 **The revolutionary loneliness product makes the invisible social health infrastructure visible.**
 
-Everyone knows they're lonely. Nobody can see *exactly why*, *which relationships are at risk*, *what specifically to do*, and *whether they're getting better or worse*. The product that makes social health as visible and actionable as a fitness tracker reading is not just a better app — it's a new category.
+Everyone knows they're lonely. Nobody can see _exactly why_, _which relationships are at risk_, _what specifically to do_, and _whether they're getting better or worse_. The product that makes social health as visible and actionable as a fitness tracker reading is not just a better app — it's a new category.
 
 ---
 
@@ -268,7 +280,7 @@ Here is the strongest case against the Social Health OS framing:
 
 This is a real risk. Blood pressure scores got people to take medication. A social health score might get people to fake interactions, volume-boost surface contacts, or optimize metrics while avoiding genuine vulnerability. The measurement might make the problem worse by shifting the goal from "feel connected" to "improve the number."
 
-**The counterargument**: Goodhart's Law destroys metrics when the metric is easy to game and disconnected from the underlying variable. Social health metrics that require *behavioral evidence* (observed interaction patterns, physiological signals, external validation from network changes) are much harder to game. The quality of the measurement determines whether Goodhart destroys it.
+**The counterargument**: Goodhart's Law destroys metrics when the metric is easy to game and disconnected from the underlying variable. Social health metrics that require _behavioral evidence_ (observed interaction patterns, physiological signals, external validation from network changes) are much harder to game. The quality of the measurement determines whether Goodhart destroys it.
 
 **The other honest problem**: Most lonely people don't know they're operating from a distorted cognitive model. Telling them "your social threat perception is biased" is stigmatizing and they'll reject it. The cognitive training layer must be embedded in the product without being labeled as clinical intervention. This is hard. Duolingo never says "you have a language learning deficit" — it just gives you streaks and XP. The social health product must do the same: deliver the CBT without the therapy framing.
 
@@ -293,6 +305,7 @@ That is Facebook-scale. That is the gap. That is what hasn't been built.
 ---
 
 **Confidence assessments**:
+
 - Deep psychology of the hypervigilance loop: **High** (Cacioppo, replicated across multiple independent labs, multiple decades)
 - Intervention hierarchy (CBT > opportunities): **High** (multiple meta-analyses, including 280-study APA meta-analysis, 2025)
 - Social Baseline Theory: **High** (Coan, published, replicated, neuroscience-backed)

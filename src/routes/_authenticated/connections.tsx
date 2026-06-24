@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/flick/app-shell";
 import { Users, MessageSquare, ArrowUpRight } from "lucide-react";
-import { cn, getAvatarStyle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { FlickAvatar } from "@/components/flick/avatar";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/connections")({
@@ -64,7 +65,7 @@ function ConnectionsPage() {
       ]);
 
       const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-      
+
       // Match lookup by other user id
       const userMatchMap = new Map<string, string>();
       if (matches) {
@@ -91,7 +92,7 @@ function ConnectionsPage() {
             otherUser: p,
             matchId: userMatchMap.get(otherId) ?? null,
           };
-        })
+        }),
       );
     } catch (err) {
       console.error("Error loading connections:", err);
@@ -139,7 +140,8 @@ function ConnectionsPage() {
             </div>
             <h2 className="font-display mt-6 text-2xl">No connections yet.</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Select "Keep in touch" on active matches before the 2-hour window expires to build your network.
+              Select "Keep in touch" on active matches before the 2-hour window expires to build
+              your network.
             </p>
           </div>
         ) : (
@@ -151,17 +153,12 @@ function ConnectionsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
               >
-                <div
-                  className="flex items-center gap-4 rounded-3xl border border-border bg-surface p-4 transition"
-                >
-                  <div
-                    className={cn(
-                      "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold shadow-sm",
-                      getAvatarStyle(c.otherUser.avatar_emoji)
-                    )}
-                  >
-                    {c.otherUser.display_name.charAt(0).toUpperCase()}
-                  </div>
+                <div className="flex items-center gap-4 rounded-3xl border border-border bg-surface p-4 transition">
+                  <FlickAvatar
+                    emoji={c.otherUser.avatar_emoji}
+                    name={c.otherUser.display_name}
+                    className="h-14 w-14 rounded-2xl text-xl shrink-0 shadow-sm"
+                  />
                   <div className="min-w-0 flex-1">
                     <h3 className="font-display truncate text-lg leading-tight">
                       {c.otherUser.display_name}

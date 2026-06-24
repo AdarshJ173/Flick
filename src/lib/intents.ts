@@ -72,4 +72,3 @@ export const INTENTS: Intent[] = [
 export function intentByKey(key: string): Intent {
   return INTENTS.find((i) => i.key === key) ?? { key, label: key, icon: Sparkles, prompt: "" };
 }
-

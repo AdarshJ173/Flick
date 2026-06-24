@@ -1,10 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/flick/app-shell";
-import { ArrowLeft, Shield, Bell, Eye, EyeOff, Trash2, LogOut, ChevronRight, Scale } from "lucide-react";
+import {
+  ArrowLeft,
+  Shield,
+  Eye,
+  EyeOff,
+  Trash2,
+  LogOut,
+  ChevronRight,
+  Scale,
+  UserX,
+} from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 
@@ -15,13 +24,56 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const navigate = useNavigate();
   const [discoverable, setDiscoverable] = useState(true);
-  const [radius, setRadius] = useState(1000);
-  const [loading, setLoading] = useState(false);
+  const [radius, setRadius] = useState(2000);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uid, setUid] = useState<string | null>(null);
 
+  // Load user settings from Supabase
   useEffect(() => {
-    // In a full production implementation, load user discovery preferences here.
-    // For now, we seed with sensible defaults.
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      setUid(u.user.id);
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("discoverable,max_radius_m")
+        .eq("id", u.user.id)
+        .maybeSingle();
+      if (p) {
+        setDiscoverable((p as any).discoverable ?? true);
+        setRadius((p as any).max_radius_m ?? 2000);
+      }
+      setLoading(false);
+    })();
   }, []);
+
+  async function savePrivacySettings(newDiscoverable: boolean, newRadius: number) {
+    if (!uid) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ discoverable: newDiscoverable, max_radius_m: newRadius })
+        .eq("id", uid);
+      if (error) throw error;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDiscoverableChange(checked: boolean) {
+    setDiscoverable(checked);
+    await savePrivacySettings(checked, radius);
+    toast.success(checked ? "You are now discoverable nearby" : "You are now completely hidden");
+  }
+
+  async function handleRadiusSave() {
+    await savePrivacySettings(discoverable, radius);
+    toast.success(`Radius set to ${radius}m`);
+  }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -29,17 +81,16 @@ function SettingsPage() {
   }
 
   async function handleDeleteAccount() {
-    const confirm = window.confirm("Are you absolutely sure you want to delete your account? This action is permanent and compliant with GDPR.");
+    const confirm = window.confirm(
+      "Are you absolutely sure you want to delete your account? This action is permanent.",
+    );
     if (!confirm) return;
-
     setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      
       const { error } = await supabase.from("profiles").delete().eq("id", u.user.id);
       if (error) throw error;
-
       await supabase.auth.signOut();
       toast.success("Account deleted successfully.");
       navigate({ to: "/auth" });
@@ -64,9 +115,7 @@ function SettingsPage() {
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Configure
             </span>
-            <h1 className="font-display mt-1 text-3xl leading-none tracking-tight">
-              Settings
-            </h1>
+            <h1 className="font-display mt-1 text-3xl leading-none tracking-tight">Settings</h1>
           </div>
         </header>
 
@@ -80,7 +129,11 @@ function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    {discoverable ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                    {discoverable ? (
+                      <Eye className="h-4 w-4 text-primary" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    )}
                     Discoverable
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5 max-w-[22ch]">
@@ -89,10 +142,8 @@ function SettingsPage() {
                 </div>
                 <Switch
                   checked={discoverable}
-                  onCheckedChange={(checked) => {
-                    setDiscoverable(checked);
-                    toast.success(checked ? "You are now discoverable nearby" : "You are now completely hidden");
-                  }}
+                  onCheckedChange={handleDiscoverableChange}
+                  disabled={loading || saving}
                 />
               </div>
 
@@ -100,7 +151,7 @@ function SettingsPage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-foreground">Max Proximity Radius</span>
+                  <span className="font-semibold text-foreground">Max Discovery Radius</span>
                   <span className="font-mono text-primary font-medium">{radius}m</span>
                 </div>
                 <Slider
@@ -111,28 +162,61 @@ function SettingsPage() {
                   onValueChange={(val) => setRadius(val[0])}
                   className="py-2"
                 />
-                <p className="text-[10px] text-muted-foreground">
-                  Limit matching and signaling to within this geographic range.
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] text-muted-foreground">
+                    Limit who can discover you to within this range.
+                  </p>
+                  <button
+                    onClick={handleRadiusSave}
+                    disabled={saving}
+                    className="text-[11px] text-primary font-semibold disabled:opacity-40"
+                  >
+                    {saving ? "Saving…" : "Save"}
+                  </button>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Guidelines Section */}
+          {/* Blocked Users */}
           <section className="space-y-3">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground flex items-center gap-1.5">
-              <Scale className="h-3.5 w-3.5" /> Safety & Legal
+              <UserX className="h-3.5 w-3.5" /> Safety
             </h2>
             <div className="rounded-3xl border border-border bg-surface divide-y divide-border/50 overflow-hidden">
               <button
-                onClick={() => toast.info("Rules: 1. Keep it real. 2. Respect physical boundaries. 3. Safety first.")}
+                onClick={() => navigate({ to: "/blocked" })}
+                className="no-tap w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/10 transition active:scale-[0.99]"
+              >
+                <span className="text-sm font-medium text-foreground">Blocked Users</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+          </section>
+
+          {/* Legal Section */}
+          <section className="space-y-3">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground flex items-center gap-1.5">
+              <Scale className="h-3.5 w-3.5" /> Legal
+            </h2>
+            <div className="rounded-3xl border border-border bg-surface divide-y divide-border/50 overflow-hidden">
+              <button
+                onClick={() =>
+                  toast.info(
+                    "Community Guidelines: Keep it real. Respect physical boundaries. Safety first.",
+                  )
+                }
                 className="no-tap w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/10 transition active:scale-[0.99]"
               >
                 <span className="text-sm font-medium text-foreground">Community Guidelines</span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
               <button
-                onClick={() => toast.info("Privacy Policy: All signals expire after 90 minutes. Absolute spatial anonymity guaranteed.")}
+                onClick={() =>
+                  toast.info(
+                    "Privacy Policy: All signals expire after 90 minutes. Absolute spatial anonymity guaranteed.",
+                  )
+                }
                 className="no-tap w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/10 transition active:scale-[0.99]"
               >
                 <span className="text-sm font-medium text-foreground">Privacy Policy & Terms</span>
@@ -141,7 +225,7 @@ function SettingsPage() {
             </div>
           </section>
 
-          {/* Account Actions / Danger Zone */}
+          {/* Account Actions */}
           <section className="space-y-3 pt-4">
             <button
               onClick={handleSignOut}
@@ -149,7 +233,7 @@ function SettingsPage() {
             >
               <LogOut className="h-4 w-4" /> Sign out
             </button>
-            
+
             <button
               onClick={handleDeleteAccount}
               disabled={loading}

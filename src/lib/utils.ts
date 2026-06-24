@@ -18,4 +18,3 @@ export function getAvatarStyle(avatarKey: string) {
   const gradient = PREMIUM_GRADIENTS[avatarKey] || PREMIUM_GRADIENTS["gradient-2"];
   return `bg-gradient-to-tr ${gradient} text-white font-semibold flex items-center justify-center shadow-md`;
 }
-

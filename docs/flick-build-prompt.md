@@ -1,11 +1,13 @@
 # FLICK — The Complete AI Build Prompt
+
 ## Master Engineering, Product & Architecture Document for AI-Assisted Development
+
 ### Version 1.0 — June 2026
 
 ---
 
 > **HOW TO USE THIS DOCUMENT:**
-> Paste this entire prompt into any AI coding agent (Cursor, Lovable, Bolt, Claude, GPT-4o with tools, Gemini Advanced) and instruct it: *"Build this application end to end. Do not skip any section. Do not use mock data. Do not hardcode anything. Every feature must work. Follow every instruction exactly."*
+> Paste this entire prompt into any AI coding agent (Cursor, Lovable, Bolt, Claude, GPT-4o with tools, Gemini Advanced) and instruct it: _"Build this application end to end. Do not skip any section. Do not use mock data. Do not hardcode anything. Every feature must work. Follow every instruction exactly."_
 
 ---
 
@@ -18,6 +20,7 @@ This is not a loneliness app. It is not a dating app. It is not a social network
 **The core mechanic:** You broadcast that you are present and open, right now, in this place. People nearby who are also open see a signal — but only if they also say yes. You never see who didn't respond. No rejection. No social cost. No vulnerability. Just the magic of two people discovering they were three meters apart and had something to share.
 
 **Non-negotiable design constraints from psychology research:**
+
 1. Zero rejection signals — users must NEVER be able to see who did not match with them
 2. Mutual-match visibility only — both must signal before either sees the other
 3. Ephemerality by default — no permanent discovery footprint
@@ -31,7 +34,7 @@ This is not a loneliness app. It is not a dating app. It is not a social network
 ### 1.1 Product Name & Identity
 
 - **Name:** Flick
-- **Tagline:** *"Be here. Find people."*
+- **Tagline:** _"Be here. Find people."_
 - **Category:** Ambient Social Discovery / Real-World Experience Platform
 - **Platform:** Progressive Web App (PWA) — Mobile-First, fully responsive
 - **Target Users:** Urban young adults (18–32), college students, young professionals, people who have recently relocated to a new city
@@ -40,6 +43,7 @@ This is not a loneliness app. It is not a dating app. It is not a social network
 ### 1.2 Problem Statement
 
 The physical infrastructure that historically generated human social bonds — third places (cafes, religious spaces, community halls), shared commutes, neighborhood proximity, civic organizations — has collapsed across urban India. What remains is:
+
 - 150M+ people who have relocated to cities in the last decade with no social infrastructure in their new location
 - Digital social networks (WhatsApp, Instagram) that connect declared relationships but cannot bridge new connections
 - AI companion apps that fill the void short-term while deepening the deficit long-term
@@ -49,11 +53,11 @@ The physical infrastructure that historically generated human social bonds — t
 
 ### 1.3 Core Value Proposition
 
-| For the User | For the Venue | For Society |
-|---|---|---|
-| Never initiate awkwardly again | Drive foot traffic through social cachet | Rebuild bridging social capital |
-| Meet people without saying "I'm lonely" | Get discovered by socially active users | Convert strangers to neighbors to community |
-| Organic connection in real contexts | Belong to a "warm spot" network | Reduce the loneliness epidemic structurally |
+| For the User                            | For the Venue                            | For Society                                 |
+| --------------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| Never initiate awkwardly again          | Drive foot traffic through social cachet | Rebuild bridging social capital             |
+| Meet people without saying "I'm lonely" | Get discovered by socially active users  | Convert strangers to neighbors to community |
+| Organic connection in real contexts     | Belong to a "warm spot" network          | Reduce the loneliness epidemic structurally |
 
 ---
 
@@ -515,21 +519,21 @@ PATCH  /api/admin/users/:id         Admin: moderate user
 
 ```javascript
 // CLIENT EMITS
-socket.emit('join_discovery', { lat, lng, radius })  // join geo channel
-socket.emit('signal_created', { signalId })           // notify nearby users of new signal
-socket.emit('signal_acknowledge', { signalId })       // acknowledge nearby signal
-socket.emit('message_send', { matchId, content })     // send chat message
-socket.emit('typing_start', { matchId })              // typing indicator
-socket.emit('typing_stop', { matchId })               // stop typing indicator
-socket.emit('presence_update', { lat, lng })          // update location
+socket.emit("join_discovery", { lat, lng, radius }); // join geo channel
+socket.emit("signal_created", { signalId }); // notify nearby users of new signal
+socket.emit("signal_acknowledge", { signalId }); // acknowledge nearby signal
+socket.emit("message_send", { matchId, content }); // send chat message
+socket.emit("typing_start", { matchId }); // typing indicator
+socket.emit("typing_stop", { matchId }); // stop typing indicator
+socket.emit("presence_update", { lat, lng }); // update location
 
 // SERVER EMITS
-socket.emit('nearby_count_update', { count })         // how many signals near you
-socket.emit('match_created', { matchId, profile })    // you have a new match!
-socket.emit('message_received', { message })          // new message in chat
-socket.emit('window_expiring', { matchId, minutesLeft }) // 15 min warning
-socket.emit('window_expired', { matchId })            // chat window closed
-socket.emit('signal_expired', { signalId })           // your signal expired
+socket.emit("nearby_count_update", { count }); // how many signals near you
+socket.emit("match_created", { matchId, profile }); // you have a new match!
+socket.emit("message_received", { message }); // new message in chat
+socket.emit("window_expiring", { matchId, minutesLeft }); // 15 min warning
+socket.emit("window_expired", { matchId }); // chat window closed
+socket.emit("signal_expired", { signalId }); // your signal expired
 ```
 
 ---
@@ -810,30 +814,35 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: SplashScreen `/splash`
+
 **Purpose:** App launch, auth check, animated brand moment
 **Duration:** 1.5 seconds max
 **Elements:**
+
 - Full-screen gradient background (brand colors)
 - Flick wordmark centered, animate in with spring scale
 - Tagline: "Be here. Find people." fade in 300ms after logo
 - Loading indicator (subtle, bottom of screen)
-**Logic:** Check JWT token → if valid → /home, if expired → /auth, first launch → /onboarding
+  **Logic:** Check JWT token → if valid → /home, if expired → /auth, first launch → /onboarding
 
 ---
 
 #### SCREEN: OnboardingWelcome `/onboarding`
+
 **Purpose:** Establish value proposition without mentioning loneliness
 **Elements:**
+
 - Full-bleed illustration: a bustling cafe with two people noticing each other (warm, inviting)
 - H1: "The people you were meant to meet are already near you"
 - Body: "Flick tells you when — so you don't have to wonder."
 - Primary CTA: "Let's go"
 - Secondary: "Skip" (top right)
-**Interactions:** Swipeable carousel between onboarding steps
+  **Interactions:** Swipeable carousel between onboarding steps
 
 ---
 
 #### SCREEN: OnboardingHow
+
 **Purpose:** Explain the core mechanic (3 steps, visual)
 **Step 1:** "Say you're here" — Illustration of phone with intent broadcast
 **Step 2:** "Stay invisible until it's mutual" — Illustration of two signals crossing
@@ -843,8 +852,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: OnboardingPrivacy
+
 **Purpose:** Establish trust and safety as core product identity
 **Elements:**
+
 - Headline: "You're invisible until both say yes"
 - Three trust statements with check icons:
   - "Nobody sees who you are until you both acknowledge each other"
@@ -855,14 +866,17 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: OnboardingPermissions
+
 **Purpose:** Request location + notifications (must explain WHY clearly)
 **Location request:**
+
 - Headline: "Flick only works if it can see where you are"
 - Explanation: "We use your location to find people nearby — only while you're using the app"
 - CTA: "Allow Location"
 - If denied: Show educational screen with manual entry option fallback
 
 **Notification request:**
+
 - Headline: "Don't miss your 90 minutes"
 - Explanation: "We'll tap you when someone matches with you"
 - CTA: "Allow Notifications"
@@ -871,8 +885,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: AuthScreen `/auth`
+
 **Purpose:** Phone OTP (primary) + Google (secondary) authentication
 **Elements:**
+
 - Headline: "Your number is your key"
 - Country code picker (defaulting to +91 India) with flag emoji
 - Phone number input — large, keyboard-optimized, instant formatting
@@ -880,26 +896,30 @@ AUTHENTICATED CORE FLOWS
 - Divider: "or"
 - Google Sign In button (prominent, not an afterthought)
 - Footer: "By continuing, you agree to our Terms and Privacy Policy" (linked)
-**Validation:** Phone number format, country code required
+  **Validation:** Phone number format, country code required
 
 ---
 
 #### SCREEN: PhoneVerifyScreen `/auth/verify`
+
 **Purpose:** 6-digit OTP entry
 **Elements:**
+
 - "Code sent to +91 XXXXX XXXXX" (masked)
 - 6 individual digit inputs — auto-advance on each digit input
 - Auto-paste from SMS (Web OTP API where supported)
 - Countdown timer: "Resend in 0:45"
 - "Resend Code" (disabled until countdown complete)
 - Back arrow to change number
-**UX:** Auto-submit when 6th digit entered. No need for "Verify" button.
+  **UX:** Auto-submit when 6th digit entered. No need for "Verify" button.
 
 ---
 
 #### SCREEN: SetupName `/setup/name`
+
 **Purpose:** Display name — first impression moment
 **Elements:**
+
 - Headline: "What should people call you?"
 - Single large text input, autofocused
 - Character counter (max 50)
@@ -910,8 +930,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: SetupPhoto `/setup/photo`
+
 **Purpose:** Profile photo — trust signal
 **Elements:**
+
 - Large circular avatar placeholder with camera icon
 - Tap to open: camera (primary), photo library (secondary)
 - Built-in crop UI — circular crop only
@@ -921,8 +943,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: SetupInterests `/setup/interests`
+
 **Purpose:** Build the interest graph (minimum 3 required)
 **Elements:**
+
 - Headline: "What's your vibe?"
 - Grid of 40+ interest chips across categories:
   - Study: GATE, CAT, Coding, Design, Research, Writing
@@ -939,8 +963,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: SetupBio `/setup/bio`
+
 **Purpose:** One-line bio — optional but powerful
 **Elements:**
+
 - Headline: "One line about you. Or nothing."
 - Large multiline input (character limit: 160)
 - Placeholder: "Trying to read 50 books this year. Failing delightfully."
@@ -950,19 +976,23 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: SetupComplete `/setup/done`
+
 **Purpose:** Celebrate setup completion — emotional hook
 **Elements:**
+
 - Full-screen animated confetti or particle burst (Framer Motion)
 - Headline: "You're in."
 - Subline: "Now go somewhere interesting."
 - Single large CTA: "Open Flick"
-**Transition:** Spring animation into HomeScreen
+  **Transition:** Spring animation into HomeScreen
 
 ---
 
 #### SCREEN: HomeScreen `/home` ← PRIMARY SCREEN
+
 **Purpose:** Command center — create signal, see nearby count, manage active signal
-**Layout:** 
+**Layout:**
+
 - Top area: Location pill ("at IIT Delhi Main Gate" or "in Koramangala" — derived from reverse geocoding)
 - Center: The BIG moment — if no active signal:
   - Large "I'm here" button — the hero element of the entire app
@@ -977,8 +1007,9 @@ AUTHENTICATED CORE FLOWS
 - Bottom section: Quick insights (last 7 days stats, anonymous)
 
 **Signal Composer (Bottom Sheet):**
+
 - Triggered by "I'm here" button
-- Intent input (natural language): "What brings you here?" 
+- Intent input (natural language): "What brings you here?"
   - Quick suggestions: "Getting coffee ☕" / "Studying 📚" / "Just here 👋" / "Open to chat 💬"
   - Custom input field below
 - Tag selector (from your profile interests, tap to add)
@@ -990,14 +1021,16 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: DiscoverScreen `/discover`
+
 **Purpose:** Map of physical space — warm spots, nearby activity
 **Elements:**
+
 - Full-screen Mapbox map centered on user location
 - Venue markers showing "warm spots" (≥3 active signals) with pulsing rings
 - Blue dot: user location
 - Map tap on venue → venue detail card slides up from bottom:
   - Venue name, type, address
-  - "X people signaling here right now" 
+  - "X people signaling here right now"
   - "Check in to this venue" button (adds venue tag to your signal)
   - Walk/ride time estimate
 - Top search bar: "Search by venue name or area"
@@ -1007,8 +1040,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: MatchesScreen `/matches`
+
 **Purpose:** All active and recent matches
 **Layout:**
+
 - Tabs: Active (window open) | Recent (last 7 days) | Connections (permanent)
 - Each match card:
   - Avatar (shown only post-match)
@@ -1025,8 +1060,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: MatchDetailScreen `/matches/:id`
+
 **Purpose:** Full match view + chat interface
 **Layout:**
+
 - Top: Profile section — avatar, name, shared interests, mutual venue
 - Timer bar: "Match window: 01:23:45 remaining" (color changes yellow < 30min, red < 10min)
 - Chat area (full height, scrollable)
@@ -1035,6 +1072,7 @@ AUTHENTICATED CORE FLOWS
 - "Keep in Touch" floating prompt (appears at 15 min remaining)
 
 **Match Reveal Animation:**
+
 - When a new match is created, show full-screen reveal animation
 - Particle burst from center
 - Avatar slides in from right
@@ -1044,8 +1082,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: ConnectionsScreen `/connections`
+
 **Purpose:** Long-term connections (mutual "keep in touch" from past matches)
 **Elements:**
+
 - List of permanent connections with avatars
 - "Met at [venue/area] · [date]" context preserved
 - "Message" button (opens new chat, not a match window — permanent chat)
@@ -1055,8 +1095,10 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: ProfileScreen `/profile`
+
 **Purpose:** My profile + stats
 **Elements:**
+
 - Large avatar (tap to edit)
 - Display name + bio
 - Interest tags
@@ -1068,7 +1110,9 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: SettingsScreen `/settings`
+
 **Elements:**
+
 - Account section: Edit Profile | Change Phone | Linked Accounts
 - Privacy section: Profile Visibility | Location Settings | Blocked Users
 - Notifications: Match alerts | Signal expiry | Connections
@@ -1079,7 +1123,9 @@ AUTHENTICATED CORE FLOWS
 ---
 
 #### SCREEN: PrivacySettings `/settings/privacy`
+
 **Full controls:**
+
 - "Discoverable" master toggle (off = completely invisible)
 - Show my interests on profile: toggle
 - Allow venue check-in: toggle
@@ -1098,6 +1144,7 @@ AUTHENTICATED CORE FLOWS
 **Brand voice:** Direct, warm, slightly playful. Never needy. Never preachy. Never mentions loneliness.
 
 **Brand personality pillars:**
+
 1. **Honest** — We don't fake data, we don't fake connection, we don't pretend the app is magic
 2. **Warm** — The product cares about you making real connections
 3. **Effortless** — Every interaction should feel like it required no effort
@@ -1108,24 +1155,24 @@ AUTHENTICATED CORE FLOWS
 ```css
 /* Primitive Tokens */
 :root {
-  --flick-amber-50:  oklch(97% 0.02 85);
+  --flick-amber-50: oklch(97% 0.02 85);
   --flick-amber-100: oklch(94% 0.05 85);
-  --flick-amber-200: oklch(88% 0.10 85);
+  --flick-amber-200: oklch(88% 0.1 85);
   --flick-amber-300: oklch(80% 0.15 78);
   --flick-amber-400: oklch(72% 0.18 72);
-  --flick-amber-500: oklch(64% 0.20 68); /* Primary brand color */
+  --flick-amber-500: oklch(64% 0.2 68); /* Primary brand color */
   --flick-amber-600: oklch(55% 0.19 65);
   --flick-amber-700: oklch(45% 0.17 62);
   --flick-amber-800: oklch(35% 0.14 60);
-  --flick-amber-900: oklch(25% 0.10 58);
-  
-  --flick-teal-50:   oklch(97% 0.02 185);
-  --flick-teal-100:  oklch(93% 0.05 185);
-  --flick-teal-400:  oklch(68% 0.14 185);
-  --flick-teal-500:  oklch(60% 0.16 185); /* Secondary brand color */
-  --flick-teal-600:  oklch(52% 0.15 185);
-  
-  --flick-neutral-50:  oklch(98% 0 0);
+  --flick-amber-900: oklch(25% 0.1 58);
+
+  --flick-teal-50: oklch(97% 0.02 185);
+  --flick-teal-100: oklch(93% 0.05 185);
+  --flick-teal-400: oklch(68% 0.14 185);
+  --flick-teal-500: oklch(60% 0.16 185); /* Secondary brand color */
+  --flick-teal-600: oklch(52% 0.15 185);
+
+  --flick-neutral-50: oklch(98% 0 0);
   --flick-neutral-100: oklch(96% 0 0);
   --flick-neutral-200: oklch(91% 0 0);
   --flick-neutral-300: oklch(84% 0 0);
@@ -1139,53 +1186,54 @@ AUTHENTICATED CORE FLOWS
 }
 
 /* Semantic Tokens — Light Mode */
-[data-theme="light"], :root {
-  --color-primary:           var(--flick-amber-500);
-  --color-primary-hover:     var(--flick-amber-600);
-  --color-primary-fg:        oklch(100% 0 0);
-  --color-secondary:         var(--flick-teal-500);
-  --color-secondary-hover:   var(--flick-teal-600);
-  --color-secondary-fg:      oklch(100% 0 0);
-  
-  --color-background:        var(--flick-neutral-50);
-  --color-surface:           oklch(100% 0 0);
-  --color-surface-raised:    var(--flick-neutral-100);
-  --color-overlay:           oklch(0% 0 0 / 0.5);
-  
-  --color-text-primary:      var(--flick-neutral-900);
-  --color-text-secondary:    var(--flick-neutral-600);
-  --color-text-muted:        var(--flick-neutral-400);
-  --color-text-inverse:      oklch(100% 0 0);
-  
-  --color-border:            var(--flick-neutral-200);
-  --color-border-strong:     var(--flick-neutral-300);
-  
-  --color-success:           oklch(60% 0.18 145);
-  --color-warning:           oklch(72% 0.18 78);
-  --color-error:             oklch(60% 0.22 25);
-  --color-info:              oklch(60% 0.16 230);
-  
-  --color-signal-pulse:      var(--flick-amber-400);
-  --color-signal-ring:       var(--flick-amber-200);
-  --color-warm-spot:         oklch(72% 0.15 45); /* warm orange for venues */
+[data-theme="light"],
+:root {
+  --color-primary: var(--flick-amber-500);
+  --color-primary-hover: var(--flick-amber-600);
+  --color-primary-fg: oklch(100% 0 0);
+  --color-secondary: var(--flick-teal-500);
+  --color-secondary-hover: var(--flick-teal-600);
+  --color-secondary-fg: oklch(100% 0 0);
+
+  --color-background: var(--flick-neutral-50);
+  --color-surface: oklch(100% 0 0);
+  --color-surface-raised: var(--flick-neutral-100);
+  --color-overlay: oklch(0% 0 0 / 0.5);
+
+  --color-text-primary: var(--flick-neutral-900);
+  --color-text-secondary: var(--flick-neutral-600);
+  --color-text-muted: var(--flick-neutral-400);
+  --color-text-inverse: oklch(100% 0 0);
+
+  --color-border: var(--flick-neutral-200);
+  --color-border-strong: var(--flick-neutral-300);
+
+  --color-success: oklch(60% 0.18 145);
+  --color-warning: oklch(72% 0.18 78);
+  --color-error: oklch(60% 0.22 25);
+  --color-info: oklch(60% 0.16 230);
+
+  --color-signal-pulse: var(--flick-amber-400);
+  --color-signal-ring: var(--flick-amber-200);
+  --color-warm-spot: oklch(72% 0.15 45); /* warm orange for venues */
 }
 
 /* Semantic Tokens — Dark Mode */
 [data-theme="dark"] {
-  --color-background:        var(--flick-neutral-950);
-  --color-surface:           var(--flick-neutral-900);
-  --color-surface-raised:    var(--flick-neutral-800);
-  
-  --color-text-primary:      var(--flick-neutral-50);
-  --color-text-secondary:    var(--flick-neutral-300);
-  --color-text-muted:        var(--flick-neutral-500);
-  
-  --color-border:            var(--flick-neutral-800);
-  --color-border-strong:     var(--flick-neutral-700);
-  
-  --color-primary:           var(--flick-amber-400);
-  --color-primary-hover:     var(--flick-amber-300);
-  --color-secondary:         var(--flick-teal-400);
+  --color-background: var(--flick-neutral-950);
+  --color-surface: var(--flick-neutral-900);
+  --color-surface-raised: var(--flick-neutral-800);
+
+  --color-text-primary: var(--flick-neutral-50);
+  --color-text-secondary: var(--flick-neutral-300);
+  --color-text-muted: var(--flick-neutral-500);
+
+  --color-border: var(--flick-neutral-800);
+  --color-border-strong: var(--flick-neutral-700);
+
+  --color-primary: var(--flick-amber-400);
+  --color-primary-hover: var(--flick-amber-300);
+  --color-secondary: var(--flick-teal-400);
 }
 ```
 
@@ -1195,68 +1243,68 @@ AUTHENTICATED CORE FLOWS
 /* Font: Inter (primary) — Google Fonts, variable font */
 /* Font: Cal Sans (display) — for hero headings, feels warm and bold */
 
---font-display: 'Cal Sans', 'Inter', system-ui, sans-serif;
---font-body: 'Inter', system-ui, -apple-system, sans-serif;
---font-mono: 'JetBrains Mono', monospace;
+--font-display: "Cal Sans", "Inter", system-ui, sans-serif;
+--font-body: "Inter", system-ui, -apple-system, sans-serif;
+--font-mono: "JetBrains Mono", monospace;
 
 /* Type Scale (matching 8px grid) */
---text-xs:   0.75rem;   /* 12px — labels, captions */
---text-sm:   0.875rem;  /* 14px — supporting text */
---text-base: 1rem;      /* 16px — body text (never go below this for body) */
---text-lg:   1.125rem;  /* 18px — card titles */
---text-xl:   1.25rem;   /* 20px — section headings */
---text-2xl:  1.5rem;    /* 24px — screen headings */
---text-3xl:  1.875rem;  /* 30px — hero text */
---text-4xl:  2.25rem;   /* 36px — display large */
+--text-xs: 0.75rem; /* 12px — labels, captions */
+--text-sm: 0.875rem; /* 14px — supporting text */
+--text-base: 1rem; /* 16px — body text (never go below this for body) */
+--text-lg: 1.125rem; /* 18px — card titles */
+--text-xl: 1.25rem; /* 20px — section headings */
+--text-2xl: 1.5rem; /* 24px — screen headings */
+--text-3xl: 1.875rem; /* 30px — hero text */
+--text-4xl: 2.25rem; /* 36px — display large */
 
 /* Line Heights */
---leading-tight:   1.2;
---leading-snug:    1.375;
---leading-normal:  1.5;
+--leading-tight: 1.2;
+--leading-snug: 1.375;
+--leading-normal: 1.5;
 --leading-relaxed: 1.625;
 
 /* Letter Spacing */
---tracking-tight:  -0.025em;
+--tracking-tight: -0.025em;
 --tracking-normal: 0em;
---tracking-wide:   0.025em;
---tracking-wider:  0.05em;
+--tracking-wide: 0.025em;
+--tracking-wider: 0.05em;
 ```
 
 ### 6.4 Spacing System (8px grid)
 
 ```css
---space-1:  0.25rem;  /* 4px */
---space-2:  0.5rem;   /* 8px */
---space-3:  0.75rem;  /* 12px */
---space-4:  1rem;     /* 16px */
---space-5:  1.25rem;  /* 20px */
---space-6:  1.5rem;   /* 24px */
---space-8:  2rem;     /* 32px */
---space-10: 2.5rem;   /* 40px */
---space-12: 3rem;     /* 48px */
---space-16: 4rem;     /* 64px */
---space-20: 5rem;     /* 80px */
---space-24: 6rem;     /* 96px */
+--space-1: 0.25rem; /* 4px */
+--space-2: 0.5rem; /* 8px */
+--space-3: 0.75rem; /* 12px */
+--space-4: 1rem; /* 16px */
+--space-5: 1.25rem; /* 20px */
+--space-6: 1.5rem; /* 24px */
+--space-8: 2rem; /* 32px */
+--space-10: 2.5rem; /* 40px */
+--space-12: 3rem; /* 48px */
+--space-16: 4rem; /* 64px */
+--space-20: 5rem; /* 80px */
+--space-24: 6rem; /* 96px */
 ```
 
 ### 6.5 Border Radius
 
 ```css
---radius-sm:   0.25rem;  /* 4px — small inputs, chips */
---radius-md:   0.5rem;   /* 8px — cards, buttons */
---radius-lg:   0.75rem;  /* 12px — modals, sheets */
---radius-xl:   1rem;     /* 16px — large cards */
---radius-2xl:  1.5rem;   /* 24px — hero elements */
---radius-full: 9999px;   /* pills, avatars */
+--radius-sm: 0.25rem; /* 4px — small inputs, chips */
+--radius-md: 0.5rem; /* 8px — cards, buttons */
+--radius-lg: 0.75rem; /* 12px — modals, sheets */
+--radius-xl: 1rem; /* 16px — large cards */
+--radius-2xl: 1.5rem; /* 24px — hero elements */
+--radius-full: 9999px; /* pills, avatars */
 ```
 
 ### 6.6 Shadows (Elevation System)
 
 ```css
---shadow-sm:  0 1px 2px oklch(0% 0 0 / 0.05);
---shadow-md:  0 4px 6px -1px oklch(0% 0 0 / 0.08), 0 2px 4px -2px oklch(0% 0 0 / 0.05);
---shadow-lg:  0 10px 15px -3px oklch(0% 0 0 / 0.08), 0 4px 6px -4px oklch(0% 0 0 / 0.05);
---shadow-xl:  0 20px 25px -5px oklch(0% 0 0 / 0.08), 0 8px 10px -6px oklch(0% 0 0 / 0.05);
+--shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.05);
+--shadow-md: 0 4px 6px -1px oklch(0% 0 0 / 0.08), 0 2px 4px -2px oklch(0% 0 0 / 0.05);
+--shadow-lg: 0 10px 15px -3px oklch(0% 0 0 / 0.08), 0 4px 6px -4px oklch(0% 0 0 / 0.05);
+--shadow-xl: 0 20px 25px -5px oklch(0% 0 0 / 0.08), 0 8px 10px -6px oklch(0% 0 0 / 0.05);
 --shadow-primary: 0 8px 24px oklch(var(--flick-amber-500) / 0.35);
 ```
 
@@ -1264,20 +1312,21 @@ AUTHENTICATED CORE FLOWS
 
 ```css
 /* Duration scale */
---duration-instant:  50ms;   /* State changes (active, focus) */
---duration-fast:     150ms;  /* Micro-interactions (button press) */
---duration-normal:   250ms;  /* Component transitions */
---duration-slow:     350ms;  /* Screen transitions */
---duration-slower:   500ms;  /* Reveal animations */
+--duration-instant: 50ms; /* State changes (active, focus) */
+--duration-fast: 150ms; /* Micro-interactions (button press) */
+--duration-normal: 250ms; /* Component transitions */
+--duration-slow: 350ms; /* Screen transitions */
+--duration-slower: 500ms; /* Reveal animations */
 
 /* Easing — cubic-bezier ONLY (never linear) */
---ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);  /* Overshoot for delight */
---ease-out:       cubic-bezier(0, 0, 0.2, 1);           /* Gentle deceleration */
---ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);         /* Standard transition */
---ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);  /* Material-style */
+--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* Overshoot for delight */
+--ease-out: cubic-bezier(0, 0, 0.2, 1); /* Gentle deceleration */
+--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* Standard transition */
+--ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1); /* Material-style */
 ```
 
 **Critical animation rules:**
+
 1. ONLY animate `transform` and `opacity` for performance — never `width`, `height`, `top`, `left`
 2. Every animation must have a purpose — not decorative
 3. Respect `prefers-reduced-motion` — all animations must have reduced-motion variants
@@ -1291,7 +1340,7 @@ This is the most important UI element in the entire app. Build it with care.
 ```jsx
 // SignalPulse.tsx — The beating heart of Flick's identity
 // Three concentric rings that pulse outward from a central dot
-// Ring 1: 75% opacity, 300ms delay  
+// Ring 1: 75% opacity, 300ms delay
 // Ring 2: 50% opacity, 600ms delay
 // Ring 3: 25% opacity, 900ms delay
 // All rings: scale from 1.0 to 2.5, opacity from ring-specific to 0
@@ -1303,12 +1352,14 @@ This is the most important UI element in the entire app. Build it with care.
 ### 6.9 Bottom Navigation
 
 **Tabs (4):**
+
 1. Home (house icon) — HomeScreen
-2. Discover (map pin icon) — DiscoverScreen  
+2. Discover (map pin icon) — DiscoverScreen
 3. Matches (lightning bolt icon) + unread badge — MatchesScreen
 4. Profile (person icon) — ProfileScreen
 
 **Rules:**
+
 - Active tab: primary color fill icon + label
 - Inactive tab: muted color icon only
 - Tab height: 60px + safe area bottom
@@ -1324,6 +1375,7 @@ This is the most important UI element in the entire app. Build it with care.
 **What it does:** User broadcasts their presence and intent to nearby users in real time.
 
 **How it works (technical):**
+
 1. User taps "I'm here" → bottom sheet opens
 2. User types intent (max 140 chars) + selects tags + sets radius/duration
 3. On "Broadcast": POST /api/signals with location, intent, tags, radius, duration
@@ -1334,6 +1386,7 @@ This is the most important UI element in the entire app. Build it with care.
 8. Cron job (every 5 min): marks expired signals as inactive
 
 **Limitations/Rules:**
+
 - One active signal per user at a time
 - Intent passes OpenAI Moderation API before storage
 - Signal location is the user's location at time of broadcast, not live-updated
@@ -1344,9 +1397,10 @@ This is the most important UI element in the entire app. Build it with care.
 **What it does:** Surfaces that two people are nearby and open — but only to each other, simultaneously.
 
 **How it works (technical):**
+
 1. When User A creates a signal, backend queries for nearby signals:
    ```sql
-   SELECT s.*, u.display_name, u.interests 
+   SELECT s.*, u.display_name, u.interests
    FROM signals s
    JOIN users u ON s.user_id = u.id
    WHERE ST_DWithin(s.location, $userLocation, $radius)
@@ -1368,6 +1422,7 @@ This is the most important UI element in the entire app. Build it with care.
 **What it does:** Time-limited ephemeral chat between matched users.
 
 **How it works:**
+
 1. Match created with `window_expires_at = now() + 90 minutes`
 2. Chat UI opens immediately on match reveal
 3. Real-time messages via Socket.io room: `match:{matchId}`
@@ -1381,6 +1436,7 @@ This is the most important UI element in the entire app. Build it with care.
 **What it does:** Marks venues on the map where Flick activity is happening.
 
 **How it works:**
+
 1. Query: venues within 5km of user with ≥3 active signals in last 60 min
 2. Displayed on map as pulsing warm-colored markers
 3. Tap → venue card with signal count + "Check in" button
@@ -1388,6 +1444,7 @@ This is the most important UI element in the entire app. Build it with care.
 5. This improves compatibility matching (two people at the same venue = higher match quality)
 
 **Venue Business Model (B2B):**
+
 - Free: Listed if signals naturally happen there (organic)
 - Basic (₹2,000/month): Priority listing, "Flick Partner" badge, monthly analytics
 - Premium (₹5,000/month): Push notifications to nearby users ("People are at [venue] right now"), featured on Discover map
@@ -1397,6 +1454,7 @@ This is the most important UI element in the entire app. Build it with care.
 **What it does:** Learns what kind of people you connect with best, improves match quality over time.
 
 **How it works:**
+
 1. Profile setup: user selects 3+ interest tags
 2. Every signal created: tags are logged
 3. Every match created: tags of both users are stored
@@ -1410,6 +1468,7 @@ This is the most important UI element in the entire app. Build it with care.
 **What it does:** Builds trust in the network through behavior, not self-report.
 
 **How it works:**
+
 1. Every completed match: both users can rate "was this a positive experience?" (binary, not 1-5)
 2. Positive: +0.1 reputation score
 3. Report filed: -0.5 reputation score (pending review)
@@ -1421,6 +1480,7 @@ This is the most important UI element in the entire app. Build it with care.
 ### 7.7 Feature 7: Safety Tools
 
 **Non-negotiable, build these first:**
+
 1. **Block:** Immediately removes user from all discovery, blocks future signals
 2. **Report:** Categorized (inappropriate intent, harassment, inappropriate content, other) + description field → goes to admin queue
 3. **Emergency contact:** Deep link to local emergency services
@@ -1432,13 +1492,13 @@ This is the most important UI element in the entire app. Build it with care.
 
 **Triggers and copy:**
 
-| Event | Title | Body | Action |
-|---|---|---|---|
-| New match | "You matched! ⚡" | "{Name} is nearby and open. 90 minutes starts now." | Open MatchDetailScreen |
-| Message received | "{Name}" | "{message preview}" | Open chat |
-| Window expiring | "15 minutes left ⏱" | "Your match window with {Name} is ending." | Open chat |
-| Signal expiring | "Your signal is expiring" | "Extend or let it go?" | Open HomeScreen |
-| Nearby activity spike | "People are gathering 📍" | "{venue} has {n} people signaling right now" | Open DiscoverScreen |
+| Event                 | Title                     | Body                                                | Action                 |
+| --------------------- | ------------------------- | --------------------------------------------------- | ---------------------- |
+| New match             | "You matched! ⚡"         | "{Name} is nearby and open. 90 minutes starts now." | Open MatchDetailScreen |
+| Message received      | "{Name}"                  | "{message preview}"                                 | Open chat              |
+| Window expiring       | "15 minutes left ⏱"       | "Your match window with {Name} is ending."          | Open chat              |
+| Signal expiring       | "Your signal is expiring" | "Extend or let it go?"                              | Open HomeScreen        |
+| Nearby activity spike | "People are gathering 📍" | "{venue} has {n} people signaling right now"        | Open DiscoverScreen    |
 
 ### 7.9 Feature 9: PWA Capabilities
 
@@ -1483,6 +1543,7 @@ This is the most important UI element in the entire app. Build it with care.
 ```
 
 **Service Worker cache strategies:**
+
 - App shell (HTML, CSS, JS): Cache-first (offline capable)
 - API responses: Network-first with stale-while-revalidate fallback
 - User photos: Cache-first with 7-day expiry
@@ -1496,6 +1557,7 @@ This is the most important UI element in the entire app. Build it with care.
 ### 8.1 Problem-Solution Fit (Verified)
 
 The problem (collapse of physical social infrastructure) is validated by:
+
 - WHO Commission on Social Connection (June 2025): 1 in 6 people globally affected
 - OECD 2025: social infrastructure identified as policy-level gap
 - Fortune March 2026: $406 billion market emerging around IRL experience
@@ -1508,6 +1570,7 @@ The problem (collapse of physical social infrastructure) is validated by:
 **Free tier:** 5 signals per 30 days, basic matching, standard map
 
 **Flick Plus — ₹199/month or ₹1,499/year:**
+
 - Unlimited signals
 - See your interest compatibility score with matches
 - Custom signal radius
@@ -1515,17 +1578,20 @@ The problem (collapse of physical social infrastructure) is validated by:
 - Priority in discovery algorithm
 
 **Flick Pro — ₹499/month:**
+
 - Everything in Plus
 - Extend match window by 30 minutes (once per match)
 - Signal scheduling (set a signal to auto-broadcast at a specific time/place)
 - Advanced interest analytics
 
 **Flick for Venues — B2B:**
+
 - Basic: ₹2,000/month
 - Premium: ₹5,000/month
 - Enterprise: ₹15,000/month (for campuses, coworking chains)
 
 **Revenue target milestones:**
+
 - Month 3 (1,000 MAU): ₹0 — focus on PMF
 - Month 6 (5,000 MAU): ₹50,000 MRR (10% conversion to ₹99 intro price)
 - Month 12 (25,000 MAU): ₹300,000 MRR
@@ -1535,11 +1601,13 @@ The problem (collapse of physical social infrastructure) is validated by:
 
 **Phase 1 — Atomic Network (Month 0-3):**
 Campus events at 3 colleges in Bangalore:
+
 - Christ University (20,000+ students)
 - BMS College of Engineering
 - Indian Institute of Science (IISc) campus area
 
 Launch event format (stolen from Tinder's USC playbook):
+
 - Show up during fresher orientation week
 - 30-minute demo event: "Everyone open Flick and tap I'm here — right now"
 - Real-time screen showing signal count rise to 50, then mutual matches appearing
@@ -1564,24 +1632,25 @@ B2B for college campuses: Flick Campus Edition (white-labeled)
 
 ### 8.4 Key Metrics to Track (from Day 1)
 
-| Metric | Definition | Target (Month 6) |
-|---|---|---|
-| MAU | Monthly active users | 5,000 |
-| Signal Rate | % MAU who create ≥1 signal/week | 40% |
-| Match Rate | Signals that result in at least 1 match | 25% |
-| Chat Activation | Matches with ≥3 messages exchanged | 60% |
-| Window Completion | Matches where chat extends to 60+ min | 30% |
-| Keep In Touch Rate | Matches where both click KIT | 15% |
-| D7 Retention | Users active 7 days after signup | 35% |
-| D30 Retention | Users active 30 days after signup | 20% |
-| NPS | Net Promoter Score | ≥50 |
-| Conversion | Free → Paid | 5% |
+| Metric             | Definition                              | Target (Month 6) |
+| ------------------ | --------------------------------------- | ---------------- |
+| MAU                | Monthly active users                    | 5,000            |
+| Signal Rate        | % MAU who create ≥1 signal/week         | 40%              |
+| Match Rate         | Signals that result in at least 1 match | 25%              |
+| Chat Activation    | Matches with ≥3 messages exchanged      | 60%              |
+| Window Completion  | Matches where chat extends to 60+ min   | 30%              |
+| Keep In Touch Rate | Matches where both click KIT            | 15%              |
+| D7 Retention       | Users active 7 days after signup        | 35%              |
+| D30 Retention      | Users active 30 days after signup       | 20%              |
+| NPS                | Net Promoter Score                      | ≥50              |
+| Conversion         | Free → Paid                             | 5%               |
 
 ### 8.5 Customer Success & Onboarding
 
 **The "aha moment":** User's first mutual match. This must happen within the first 3 signals. If a user sends 3 signals and never matches, they will not return. This is the activation problem to optimize obsessively.
 
 **Onboarding emails:**
+
 - Day 0: "Welcome to Flick — your first signal is waiting" (with location permission reminder)
 - Day 1 (if no signal): "People are near you right now. Here's how to find them."
 - Day 3 (if signal but no match): "Tip: signals at coffee shops match 3x more than signals at home"
@@ -1589,14 +1658,14 @@ B2B for college campuses: Flick Campus Edition (white-labeled)
 
 ### 8.6 Anti-Patterns to Avoid (from failed predecessors)
 
-| Failed App | Mistake | Flick's Solution |
-|---|---|---|
-| BumbleBFF | Replicated dating app UI → transactional feel | Intent-first, activity-first, never profile-first |
-| Foursquare | Tracked location but didn't solve intent | Intent broadcast, not location broadcast |
-| MeetMyDog | Required admitting loneliness | Never mention loneliness in any UX copy |
-| Meetup | Asymmetric RSVP (creates rejection fear) | Mutual acknowledgment only |
-| Nextdoor | Negative by default (complaints) | Positive by design (open, present, sharing) |
-| BeReal | Novelty wore off | Network density creates compounding value (not novelty) |
+| Failed App | Mistake                                       | Flick's Solution                                        |
+| ---------- | --------------------------------------------- | ------------------------------------------------------- |
+| BumbleBFF  | Replicated dating app UI → transactional feel | Intent-first, activity-first, never profile-first       |
+| Foursquare | Tracked location but didn't solve intent      | Intent broadcast, not location broadcast                |
+| MeetMyDog  | Required admitting loneliness                 | Never mention loneliness in any UX copy                 |
+| Meetup     | Asymmetric RSVP (creates rejection fear)      | Mutual acknowledgment only                              |
+| Nextdoor   | Negative by default (complaints)              | Positive by design (open, present, sharing)             |
+| BeReal     | Novelty wore off                              | Network density creates compounding value (not novelty) |
 
 ---
 
@@ -1717,6 +1786,6 @@ You are building Flick. Follow these rules absolutely:
 
 ---
 
-*End of Flick Build Prompt — Version 1.0*
-*Built from: WHO Commission research, Cacioppo neuroscience, Putnam social capital theory, Fortune IRL economy data, SaaS Playbook 2026, UIUX Complete Reference, previous deep research synthesis*
-*For: Adarsh — build this. Make it legendary.*
+_End of Flick Build Prompt — Version 1.0_
+_Built from: WHO Commission research, Cacioppo neuroscience, Putnam social capital theory, Fortune IRL economy data, SaaS Playbook 2026, UIUX Complete Reference, previous deep research synthesis_
+_For: Adarsh — build this. Make it legendary._

@@ -146,11 +146,13 @@ function SignalCard({
 }) {
   const intent = intentByKey(signal.intent);
   const distLabel =
-    signal.distance_m < 80
-      ? "right next to you"
-      : signal.distance_m < 1000
-        ? `${Math.round(signal.distance_m / 10) * 10}m away`
-        : `${(signal.distance_m / 1000).toFixed(1)}km away`;
+    signal.distance_m < 250
+      ? "< 250m away"
+      : signal.distance_m < 500
+        ? "250m - 500m away"
+        : signal.distance_m < 1000
+          ? "500m - 1km away"
+          : "1km - 2km away";
 
   return (
     <motion.li
@@ -167,7 +169,9 @@ function SignalCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-display text-xl leading-tight whitespace-nowrap overflow-hidden text-ellipsis">{intent.label}</h3>
+            <h3 className="font-display text-xl leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+              {intent.label}
+            </h3>
             <LivePulse size={6} />
           </div>
           <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">

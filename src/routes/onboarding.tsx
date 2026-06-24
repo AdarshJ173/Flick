@@ -72,10 +72,12 @@ function OnboardingPage() {
                 <Sparkles className="h-10 w-10 text-primary animate-pulse" />
               </div>
               <h1 className="font-display text-4xl leading-[1.05] tracking-tight">
-                The people you were meant to meet are <span className="italic text-primary">already near you</span>.
+                The people you were meant to meet are{" "}
+                <span className="italic text-primary">already near you</span>.
               </h1>
               <p className="text-[15px] leading-relaxed text-muted-foreground">
-                Flick broadcasts that you're present and open, in this exact location. No permanent footprints, just physical reality.
+                Flick broadcasts that you're present and open, in this exact location. No permanent
+                footprints, just physical reality.
               </p>
             </motion.div>
           )}
@@ -148,9 +150,7 @@ function OnboardingPage() {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/20">
                   <MapPin className="h-6 w-6 text-primary animate-pulse" />
                 </div>
-                <h2 className="font-display mt-4 text-3xl tracking-tight">
-                  One last thing.
-                </h2>
+                <h2 className="font-display mt-4 text-3xl tracking-tight">One last thing.</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Flick relies on your device location to match you within 500m–2km.
                 </p>
@@ -166,8 +166,10 @@ function OnboardingPage() {
                           next();
                         },
                         () => {
-                          toast.error("Location permission denied. You can enable it in system settings.");
-                        }
+                          toast.error(
+                            "Location permission denied. You can enable it in system settings.",
+                          );
+                        },
                       );
                     }
                   }}

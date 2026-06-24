@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/flick/app-shell";
 import { LivePulse } from "@/components/flick/live-pulse";
+import { MatchReveal } from "@/components/flick/match-reveal";
 import { INTENTS, intentByKey, type Intent } from "@/lib/intents";
-import { MapPin, X, Clock, Sparkles } from "lucide-react";
+import { reverseGeocode } from "@/lib/geocode";
+import { MapPin, X, Clock, Sparkles, Users, Navigation } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
@@ -21,24 +23,38 @@ type ActiveSignal = {
   expires_at: string;
 };
 
+type PendingReveal = {
+  matchId: string;
+  otherName: string;
+  otherAvatar: string;
+  sharedIntent: string;
+};
+
 function HomePage() {
   const navigate = useNavigate();
   const [intent, setIntent] = useState<Intent>(INTENTS[0]);
   const [note, setNote] = useState("");
   const [radius, setRadius] = useState(800);
-  const [duration, setDuration] = useState(60); // minutes
+  const [duration, setDuration] = useState(60);
   const [posting, setPosting] = useState(false);
   const [active, setActive] = useState<ActiveSignal | null>(null);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
+  const [nearbyCount, setNearbyCount] = useState<number | null>(null);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
+  const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [reveal, setReveal] = useState<PendingReveal | null>(null);
+  const [uid, setUid] = useState<string | null>(null);
+  const locationFetched = useRef(false);
 
-  // Load active signal
+  // Load current user and active signal
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const { data: u } = await supabase.auth.getUser();
         if (!u.user) return;
+        if (alive) setUid(u.user.id);
         const { data } = await supabase
           .from("signals")
           .select("id,intent,note,radius_m,place_label,expires_at")
@@ -48,15 +64,11 @@ function HomePage() {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (alive) {
-          setActive(data ?? null);
-        }
+        if (alive) setActive(data ?? null);
       } catch (err) {
         console.error("Error loading active signal:", err);
       } finally {
-        if (alive) {
-          setLoading(false);
-        }
+        if (alive) setLoading(false);
       }
     })();
     return () => {
@@ -64,6 +76,113 @@ function HomePage() {
     };
   }, []);
 
+  // Geolocation + nearby count
+  const fetchNearbyCount = useCallback(async (p: { lat: number; lng: number }) => {
+    try {
+      const { data, error } = await supabase.rpc("count_nearby_signals", {
+        in_lat: p.lat,
+        in_lng: p.lng,
+        in_search_radius_m: 2000,
+      });
+      if (!error && typeof data === "number") setNearbyCount(data);
+    } catch {
+      /* silent */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const watch = navigator.geolocation.watchPosition(
+      async (p) => {
+        const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
+        setPos(loc);
+        fetchNearbyCount(loc);
+        // Only reverse geocode once
+        if (!locationFetched.current) {
+          locationFetched.current = true;
+          const label = await reverseGeocode(loc.lat, loc.lng);
+          setLocationLabel(label);
+        }
+      },
+      () => {
+        /* permission denied, silent on home */
+      },
+      { enableHighAccuracy: true, maximumAge: 30000 },
+    );
+    return () => navigator.geolocation.clearWatch(watch);
+  }, [fetchNearbyCount]);
+
+  // Realtime: listen for new matches
+  useEffect(() => {
+    if (!uid) return;
+    const channel = supabase
+      .channel("home-matches-feed")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "matches", filter: `user_a=eq.${uid}` },
+        async (payload) => {
+          await handleNewMatch(
+            payload.new as { id: string; user_a: string; user_b: string; signal_id: string },
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "matches", filter: `user_b=eq.${uid}` },
+        async (payload) => {
+          await handleNewMatch(
+            payload.new as { id: string; user_a: string; user_b: string; signal_id: string },
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [uid]);
+
+  // Realtime: listen for signals changes to update count
+  useEffect(() => {
+    if (!pos) return;
+    const channel = supabase
+      .channel("home-signals-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "signals" }, () => {
+        fetchNearbyCount(pos);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pos, fetchNearbyCount]);
+
+  async function handleNewMatch(match: {
+    id: string;
+    user_a: string;
+    user_b: string;
+    signal_id: string;
+  }) {
+    const otherId = match.user_a === uid ? match.user_b : match.user_a;
+    try {
+      const [{ data: p }, { data: s }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name,avatar_emoji")
+          .eq("id", otherId)
+          .maybeSingle(),
+        supabase.from("signals").select("intent").eq("id", match.signal_id).maybeSingle(),
+      ]);
+      setReveal({
+        matchId: match.id,
+        otherName: p?.display_name ?? "Someone",
+        otherAvatar: p?.avatar_emoji ?? "gradient-2",
+        sharedIntent: intentByKey(s?.intent ?? "").label,
+      });
+    } catch {
+      toast.success("New match! Check your matches.", { duration: 4000 });
+    }
+  }
+
+  // Clock tick
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
@@ -72,7 +191,7 @@ function HomePage() {
   async function goLive() {
     setPosting(true);
     try {
-      const pos = await getPosition();
+      const p = await getPosition();
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
       const expires_at = new Date(Date.now() + duration * 60 * 1000).toISOString();
@@ -83,13 +202,15 @@ function HomePage() {
           intent: intent.key,
           note: note.trim() || null,
           radius_m: radius,
-          location: `POINT(${pos.lng} ${pos.lat})` as unknown,
+          location: `POINT(${p.lng} ${p.lat})` as unknown,
           expires_at,
         })
         .select("id,intent,note,radius_m,place_label,expires_at")
         .single();
       if (error) throw error;
       setActive(data);
+      // Refresh nearby after going live
+      fetchNearbyCount({ lat: p.lat, lng: p.lng });
       toast.success("You're live. People nearby can see your signal now.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't go live");
@@ -116,6 +237,7 @@ function HomePage() {
   return (
     <AppShell>
       <div className="px-5 pt-12">
+        {/* Location + status header */}
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <LivePulse size={9} />
@@ -123,13 +245,60 @@ function HomePage() {
               {active ? "You're live" : "Quiet"}
             </span>
           </div>
-          <button
-            onClick={() => navigate({ to: "/nearby" })}
-            className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground whitespace-nowrap shrink-0"
-          >
-            See who's around →
-          </button>
+          {locationLabel && (
+            <div className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[11px] font-medium text-muted-foreground max-w-[45%]">
+              <Navigation className="h-3 w-3 shrink-0 text-primary" />
+              <span className="truncate">{locationLabel}</span>
+            </div>
+          )}
         </header>
+
+        {/* Nearby count pill */}
+        {nearbyCount !== null && !active && (
+          <motion.button
+            onClick={() => navigate({ to: "/nearby" })}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="no-tap mt-4 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 transition active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
+                <Users className="h-4 w-4 text-primary" />
+                {nearbyCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-warm text-[9px] font-bold text-warm-foreground">
+                    {nearbyCount > 9 ? "9+" : nearbyCount}
+                  </span>
+                )}
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-semibold text-foreground">
+                  {nearbyCount === 0
+                    ? "No one nearby yet"
+                    : nearbyCount === 1
+                      ? "1 person nearby and open"
+                      : `${nearbyCount} people nearby and open`}
+                </div>
+                <div className="text-[11px] text-muted-foreground">within 2km · tap to see</div>
+              </div>
+            </div>
+            <span className="text-muted-foreground text-sm">→</span>
+          </motion.button>
+        )}
+
+        {/* Active signal nearby count (if live) */}
+        {nearbyCount !== null && active && (
+          <motion.button
+            onClick={() => navigate({ to: "/nearby" })}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="no-tap mt-4 flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-xs font-medium text-primary transition active:scale-95"
+          >
+            <Users className="h-3.5 w-3.5" />
+            {nearbyCount === 0 ? "No one else nearby" : `${nearbyCount} people nearby too`}
+            <span className="text-primary/60">→</span>
+          </motion.button>
+        )}
 
         <AnimatePresence mode="wait">
           {active ? (
@@ -151,6 +320,18 @@ function HomePage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Match reveal overlay */}
+      <MatchReveal
+        visible={!!reveal}
+        otherName={reveal?.otherName ?? ""}
+        otherAvatar={reveal?.otherAvatar ?? "gradient-2"}
+        sharedIntent={reveal?.sharedIntent ?? ""}
+        onDismiss={() => {
+          if (reveal) navigate({ to: "/match/$matchId", params: { matchId: reveal.matchId } });
+          setReveal(null);
+        }}
+      />
     </AppShell>
   );
 }
@@ -179,6 +360,7 @@ function ComposerCard(props: {
     posting,
     onGoLive,
   } = props;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 10 }}
@@ -191,10 +373,11 @@ function ComposerCard(props: {
         Right now, <span className="italic text-primary">I'm open to…</span>
       </h1>
 
+      {/* Intent scroller */}
       <div className="mt-7 -mx-5 overflow-x-auto px-5 [scrollbar-width:none]">
         <div className="flex gap-2 pb-2">
           {INTENTS.map((it) => {
-            const active = it.key === intent.key;
+            const isActive = it.key === intent.key;
             return (
               <button
                 key={it.key}
@@ -203,7 +386,7 @@ function ComposerCard(props: {
                   if (!note) setNote("");
                 }}
                 className={`no-tap flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition active:scale-95 whitespace-nowrap ${
-                  active
+                  isActive
                     ? "border-primary/40 bg-primary/15 text-primary"
                     : "border-border bg-surface text-foreground"
                 }`}
@@ -215,6 +398,7 @@ function ComposerCard(props: {
         </div>
       </div>
 
+      {/* Note textarea */}
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value.slice(0, 140))}
@@ -224,6 +408,7 @@ function ComposerCard(props: {
       />
       <div className="mt-1 text-right text-[11px] text-muted-foreground">{note.length}/140</div>
 
+      {/* Sliders */}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <SliderCard
           label="Radius"
@@ -262,7 +447,7 @@ function ComposerCard(props: {
           "Going live…"
         ) : (
           <>
-            Go live <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" /> Go live
           </>
         )}
       </button>
@@ -311,6 +496,9 @@ function ActiveSignalCard({
   const remainMs = Math.max(0, expiresMs - now);
   const mins = Math.floor(remainMs / 60000);
   const secs = Math.floor((remainMs % 60000) / 1000);
+  const isUrgent = mins < 10;
+  const isWarning = mins < 30;
+
   return (
     <motion.section
       initial={{ opacity: 0, scale: 0.97 }}
@@ -339,9 +527,15 @@ function ActiveSignalCard({
           {signal.note && (
             <p className="mt-4 text-[15px] leading-relaxed text-foreground/90">"{signal.note}"</p>
           )}
-          <div className="mt-6 flex items-center justify-between rounded-2xl bg-background/40 px-4 py-3 text-sm">
+          <div
+            className={`mt-6 flex items-center justify-between rounded-2xl px-4 py-3 text-sm ${
+              isUrgent ? "bg-destructive/10" : isWarning ? "bg-warm/10" : "bg-background/40"
+            }`}
+          >
             <span className="text-muted-foreground">Ends in</span>
-            <span className="font-mono text-primary">
+            <span
+              className={`font-mono ${isUrgent ? "text-destructive" : isWarning ? "text-warm" : "text-primary"}`}
+            >
               {mins}m {secs.toString().padStart(2, "0")}s
             </span>
           </div>
@@ -362,6 +556,7 @@ function LoadingShimmer() {
   return (
     <div className="px-5 pt-12">
       <div className="h-3 w-20 rounded bg-muted" />
+      <div className="mt-4 h-11 w-full rounded-2xl bg-muted" />
       <div className="mt-8 h-12 w-2/3 rounded bg-muted" />
       <div className="mt-6 h-32 w-full rounded-2xl bg-muted" />
     </div>

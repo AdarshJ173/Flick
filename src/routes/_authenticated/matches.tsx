@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/flick/app-shell";
 import { intentByKey } from "@/lib/intents";
-import { MessageCircle, ArrowUpRight } from "lucide-react";
-import { cn, getAvatarStyle } from "@/lib/utils";
+import { MessageCircle, ArrowUpRight, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { FlickAvatar } from "@/components/flick/avatar";
 
 export const Route = createFileRoute("/_authenticated/matches")({
   component: MatchesPage,
@@ -21,11 +22,15 @@ type Row = {
   other: { id: string; display_name: string; avatar_emoji: string } | null;
   intent: string | null;
   last_message: string | null;
+  isActive: boolean;
 };
+
+type TabKey = "active" | "recent";
 
 function MatchesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<TabKey>("active");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function load() {
@@ -33,10 +38,13 @@ function MatchesPage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const uid = u.user.id;
+
+      // Fetch all matches from the last 7 days
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data: matches } = await supabase
         .from("matches")
         .select("id,created_at,expires_at,user_a,user_b,signal_id")
-        .gt("expires_at", new Date().toISOString())
+        .gt("created_at", since)
         .order("created_at", { ascending: false });
 
       if (!matches || matches.length === 0) {
@@ -67,6 +75,7 @@ function MatchesPage() {
       const lastMap = new Map<string, string>();
       for (const m of lasts ?? []) if (!lastMap.has(m.match_id)) lastMap.set(m.match_id, m.body);
 
+      const now = new Date().toISOString();
       setRows(
         matches.map((m) => {
           const otherId = m.user_a === uid ? m.user_b : m.user_a;
@@ -76,6 +85,7 @@ function MatchesPage() {
             other: p,
             intent: sigMap.get(m.signal_id) ?? null,
             last_message: lastMap.get(m.id) ?? null,
+            isActive: m.expires_at > now,
           };
         }),
       );
@@ -100,6 +110,8 @@ function MatchesPage() {
     };
   }, []);
 
+  const filtered = rows.filter((r) => (tab === "active" ? r.isActive : !r.isActive));
+
   return (
     <AppShell>
       <div className="px-5 pt-12">
@@ -118,21 +130,42 @@ function MatchesPage() {
           </p>
         </header>
 
+        {/* Tab switcher */}
         <div className="mt-6 flex border-b border-border">
-          <Link
-            to="/matches"
-            className={cn(
-              "flex-1 pb-3 text-center text-sm font-semibold border-b-2 transition-colors",
-              pathname === "/matches" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
-            )}
-          >
-            Active
-          </Link>
+          {(["active", "recent"] as const).map((t) => {
+            const count = rows.filter((r) => (t === "active" ? r.isActive : !r.isActive)).length;
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "flex-1 pb-3 text-center text-sm font-semibold border-b-2 transition-colors",
+                  tab === t
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground",
+                )}
+              >
+                {t === "active" ? "Active" : "Recent"}
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      "ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full text-[10px] font-bold px-1",
+                      tab === t ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
           <Link
             to="/connections"
             className={cn(
               "flex-1 pb-3 text-center text-sm font-semibold border-b-2 transition-colors",
-              pathname === "/connections" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+              pathname === "/connections"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground",
             )}
           >
             Permanent
@@ -148,56 +181,95 @@ function MatchesPage() {
               />
             ))}
           </ul>
-        ) : rows.length === 0 ? (
-          <div className="mt-20 text-center">
+        ) : filtered.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-20 text-center"
+          >
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surface">
-              <MessageCircle className="h-9 w-9 text-muted-foreground" />
+              {tab === "active" ? (
+                <MessageCircle className="h-9 w-9 text-muted-foreground" />
+              ) : (
+                <Clock className="h-9 w-9 text-muted-foreground" />
+              )}
             </div>
-            <h2 className="font-display mt-6 text-2xl">Nothing mutual yet.</h2>
+            <h2 className="font-display mt-6 text-2xl">
+              {tab === "active" ? "Nothing mutual yet." : "No recent matches."}
+            </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              When someone you waved at is open too, they'll appear here.
+              {tab === "active"
+                ? "When someone you waved at is open too, they'll appear here."
+                : "Matches from the last 7 days appear here after their window closes."}
             </p>
-          </div>
+          </motion.div>
         ) : (
           <ul className="mt-8 space-y-3">
-            {rows.map((m, i) => {
-              const intent = intentByKey(m.intent ?? "");
-              const expiresIn = Math.max(0, new Date(m.expires_at).getTime() - Date.now());
-              const mins = Math.floor(expiresIn / 60000);
-              return (
-                <motion.li
-                  key={m.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                >
-                  <Link
-                    to="/match/$matchId"
-                    params={{ matchId: m.id }}
-                    className="no-tap group flex items-center gap-4 rounded-3xl border border-border bg-surface p-4 transition active:scale-[0.98]"
+            <AnimatePresence>
+              {filtered.map((m, i) => {
+                const intent = intentByKey(m.intent ?? "");
+                const expiresIn = Math.max(0, new Date(m.expires_at).getTime() - Date.now());
+                const mins = Math.floor(expiresIn / 60000);
+                const isUrgent = m.isActive && mins < 10;
+                const isWarning = m.isActive && mins < 30;
+
+                return (
+                  <motion.li
+                    key={m.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ delay: i * 0.04 }}
                   >
-                    <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold warm-glow", getAvatarStyle(m.other?.avatar_emoji ?? ""))}>
-                      {(m.other?.display_name ?? "S").charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-display truncate text-lg leading-tight">
-                          {m.other?.display_name ?? "Someone"}
-                        </h3>
-                        <intent.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <Link
+                      to="/match/$matchId"
+                      params={{ matchId: m.id }}
+                      className={cn(
+                        "no-tap group flex items-center gap-4 rounded-3xl border bg-surface p-4 transition active:scale-[0.98]",
+                        isUrgent
+                          ? "border-destructive/30"
+                          : isWarning
+                            ? "border-warm/30"
+                            : "border-border",
+                      )}
+                    >
+                      <FlickAvatar
+                        emoji={m.other?.avatar_emoji ?? "gradient-2"}
+                        name={m.other?.display_name ?? "Someone"}
+                        className={cn(
+                          "h-14 w-14 rounded-2xl text-xl shrink-0",
+                          m.isActive ? "warm-glow" : "opacity-60",
+                        )}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-display truncate text-lg leading-tight">
+                            {m.other?.display_name ?? "Someone"}
+                          </h3>
+                          <intent.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                          {m.last_message ?? `Open to ${intent.label.toLowerCase()} — say hi`}
+                        </p>
                       </div>
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {m.last_message ?? `Open to ${intent.label.toLowerCase()} — say hi`}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 text-[10px] uppercase tracking-[0.14em] text-muted-foreground whitespace-nowrap">
-                      <span className="font-mono text-warm">{mins}m left</span>
-                      <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-active:translate-x-0.5" />
-                    </div>
-                  </Link>
-                </motion.li>
-              );
-            })}
+                      <div className="flex flex-col items-end gap-1 text-[10px] uppercase tracking-[0.14em] whitespace-nowrap">
+                        {m.isActive ? (
+                          <span
+                            className={`font-mono ${isUrgent ? "text-destructive" : isWarning ? "text-warm" : "text-warm"}`}
+                          >
+                            {mins}m left
+                          </span>
+                        ) : (
+                          <span className="font-mono text-muted-foreground">Ended</span>
+                        )}
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-active:translate-x-0.5" />
+                      </div>
+                    </Link>
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
           </ul>
         )}
       </div>

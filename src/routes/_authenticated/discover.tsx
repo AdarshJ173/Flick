@@ -33,6 +33,17 @@ function getAngleFromId(id: string): number {
   return (Math.abs(hash) % 360) * (Math.PI / 180);
 }
 
+const FILTER_OPTIONS = [
+  { key: "all", label: "All" },
+  { key: "coffee", label: "Coffee" },
+  { key: "work", label: "Study" },
+  { key: "food", label: "Food" },
+  { key: "walk", label: "Walk" },
+  { key: "talk", label: "Chat" },
+] as const;
+
+type FilterKey = (typeof FILTER_OPTIONS)[number]["key"];
+
 function DiscoverPage() {
   const navigate = useNavigate();
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -41,19 +52,67 @@ function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [waving, setWaving] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const fetchSignals = useCallback(async (p: { lat: number; lng: number }) => {
-    const { data, error } = await supabase.rpc("get_nearby_signals", {
+    const { data: signalsData, error: signalsError } = await supabase.rpc("get_nearby_signals", {
       in_lat: p.lat,
       in_lng: p.lng,
       in_search_radius_m: 2000,
     });
-    if (error) {
-      toast.error(error.message);
+    if (signalsError) {
+      toast.error(signalsError.message);
       return;
     }
-    const list = (data as NearbySignal[]) ?? [];
-    setSignals(list);
+    const list = (signalsData as NearbySignal[]) ?? [];
+
+    // Fetch related profile details to display Trust info
+    if (list.length > 0) {
+      const userIds = list
+        .map((s: any) => {
+          // Since get_nearby_signals might not return user_id, let's fetch matching signal owners
+          return s.user_id;
+        })
+        .filter(Boolean);
+
+      // If user_id is not in list returned, we fetch them via signals table mapping
+      const { data: signalsOwners } = await supabase
+        .from("signals")
+        .select(
+          "id, user_id, profiles(display_name, avatar_emoji, photo_verified, linkedin_url, instagram_url, website_url, age_verified)",
+        )
+        .in(
+          "id",
+          list.map((s) => s.id),
+        );
+
+      const enriched = list.map((s) => {
+        const owner = signalsOwners?.find((o) => o.id === s.id);
+        const profile = owner?.profiles as any;
+        let score = 25;
+        if (profile) {
+          if (profile.age_verified) score += 15;
+          if (profile.photo_verified) score += 25;
+          if (profile.linkedin_url) score += 15;
+          if (profile.instagram_url) score += 15;
+          if (profile.website_url) score += 5;
+        }
+        return {
+          ...s,
+          user_id: owner?.user_id,
+          display_name: profile?.display_name || "Someone",
+          avatar_emoji: profile?.avatar_emoji || "gradient-2",
+          trustScore: score,
+          photo_verified: !!profile?.photo_verified,
+          linkedin_url: profile?.linkedin_url,
+          instagram_url: profile?.instagram_url,
+          website_url: profile?.website_url,
+        };
+      });
+      setSignals(enriched as any);
+    } else {
+      setSignals([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -99,13 +158,13 @@ function DiscoverPage() {
     try {
       const { data, error } = await supabase.rpc("wave_on_signal", { in_signal_id: signal.id });
       if (error) throw error;
-      
+
       // Update UI state
       setSignals((arr) => arr.map((s) => (s.id === signal.id ? { ...s, already_waved: true } : s)));
       if (selectedSignal?.id === signal.id) {
-        setSelectedSignal((prev) => prev ? { ...prev, already_waved: true } : null);
+        setSelectedSignal((prev) => (prev ? { ...prev, already_waved: true } : null));
       }
-      
+
       toast.success("Wave sent. If it's mutual, you'll match instantly!", { duration: 3500 });
       if (data) {
         navigate({ to: "/match/$matchId", params: { matchId: data as string } });
@@ -126,7 +185,10 @@ function DiscoverPage() {
         <header className="flex items-end justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Compass className="h-4 w-4 text-primary animate-spin" style={{ animationDuration: "12s" }} />
+              <Compass
+                className="h-4 w-4 text-primary animate-spin"
+                style={{ animationDuration: "12s" }}
+              />
               <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 Radar
               </span>
@@ -207,7 +269,7 @@ function DiscoverPage() {
                             "flex h-8 w-8 items-center justify-center rounded-xl text-xs transition duration-200 border",
                             selectedSignal?.id === spot.id
                               ? "bg-warm text-warm-foreground border-warm scale-110 shadow-lg"
-                              : "bg-surface border-border text-foreground hover:scale-105"
+                              : "bg-surface border-border text-foreground hover:scale-105",
                           )}
                         >
                           {(() => {
@@ -235,15 +297,49 @@ function DiscoverPage() {
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-display text-2xl leading-none whitespace-nowrap overflow-hidden text-ellipsis">
-                          Open to {intentByKey(selectedSignal.intent).label.toLowerCase()}
-                        </h3>
-                        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-display text-2xl leading-none whitespace-nowrap overflow-hidden text-ellipsis">
+                            Open to {intentByKey(selectedSignal.intent).label.toLowerCase()}
+                          </h3>
+                          {/* Trust Badge Tier representation */}
+                          {(() => {
+                            const score = (selectedSignal as any).trustScore || 25;
+                            const getBadgeClass = (s: number) => {
+                              if (s < 40)
+                                return "bg-muted text-muted-foreground border-muted-foreground/20";
+                              if (s < 60) return "bg-primary/20 text-primary border-primary/20";
+                              if (s < 80)
+                                return "bg-emerald-500/20 text-emerald-400 border-emerald-500/20";
+                              return "bg-amber-500/20 text-amber-400 border-amber-500/20";
+                            };
+                            const getBadgeLabel = (s: number) => {
+                              if (s < 40) return "Unverified";
+                              if (s < 60) return "Verified";
+                              if (s < 80) return "Trusted";
+                              return "Established";
+                            };
+                            return (
+                              <span
+                                className={cn(
+                                  "text-[9px] font-mono px-2 py-0.5 rounded-full border shrink-0",
+                                  getBadgeClass(score),
+                                )}
+                              >
+                                {getBadgeLabel(score)}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           <span>
-                            {selectedSignal.distance_m < 100
-                              ? "very close to you"
-                              : `${Math.round(selectedSignal.distance_m / 10) * 10}m away`}
+                            {selectedSignal.distance_m < 250
+                              ? "< 250m away"
+                              : selectedSignal.distance_m < 500
+                                ? "250m - 500m away"
+                                : selectedSignal.distance_m < 1000
+                                  ? "500m - 1km away"
+                                  : "1km - 2km away"}
                           </span>
                         </div>
                         {selectedSignal.note && (
@@ -251,6 +347,41 @@ function DiscoverPage() {
                             "{selectedSignal.note}"
                           </p>
                         )}
+
+                        {/* Social verifications panel */}
+                        <div className="mt-4 rounded-xl bg-surface-2 p-3 space-y-2 text-xs">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold block">
+                            Identity & Verifications
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded border text-[10px]",
+                                (selectedSignal as any).photo_verified
+                                  ? "text-primary border-primary/20 bg-primary/10"
+                                  : "text-muted-foreground border-border",
+                              )}
+                            >
+                              {(selectedSignal as any).photo_verified
+                                ? "✓ Liveness Passed"
+                                : "✗ Face Unverified"}
+                            </span>
+                            {[
+                              (selectedSignal as any).linkedin_url && "LinkedIn",
+                              (selectedSignal as any).instagram_url && "Instagram",
+                              (selectedSignal as any).website_url && "Website",
+                            ]
+                              .filter(Boolean)
+                              .map((plat) => (
+                                <span
+                                  key={plat}
+                                  className="px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px]"
+                                >
+                                  ✓ {plat}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -262,12 +393,51 @@ function DiscoverPage() {
                           "no-tap flex-1 flex h-12 items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition active:scale-[0.98]",
                           selectedSignal.already_waved
                             ? "bg-warm/15 text-warm border border-warm/30"
-                            : "bg-primary text-primary-foreground"
+                            : "bg-primary text-primary-foreground",
                         )}
                       >
-                        <Hand className={cn("h-4 w-4 shrink-0", selectedSignal.already_waved ? "" : "rotate-12")} />
+                        <Hand
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            selectedSignal.already_waved ? "" : "rotate-12",
+                          )}
+                        />
                         {selectedSignal.already_waved ? "Waved" : "Wave Back"}
                       </button>
+
+                      {/* 1-Click Report / Block Button */}
+                      <button
+                        onClick={async () => {
+                          const conf = window.confirm(
+                            "Report profile for safety review and block them?",
+                          );
+                          if (!conf) return;
+                          try {
+                            const { error: blockErr } = await supabase.rpc("block_user", {
+                              in_blocked_id: (selectedSignal as any).user_id,
+                            });
+                            if (blockErr) throw blockErr;
+                            const {
+                              data: { user },
+                            } = await supabase.auth.getUser();
+                            if (!user) throw new Error("User not authenticated");
+                            await supabase.from("reports").insert({
+                              reporter_id: user.id,
+                              reported_id: (selectedSignal as any).user_id,
+                              reason: "Inappropriate profile / safety concern",
+                            });
+                            toast.success("Profile blocked and reported.");
+                            setSelectedSignal(null);
+                            fetchSignals(pos!);
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Reporting failed");
+                          }
+                        }}
+                        className="no-tap h-12 px-3 flex items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/5 text-destructive transition active:scale-[0.98] text-xs font-semibold"
+                      >
+                        Block & Report
+                      </button>
+
                       <button
                         onClick={() => setSelectedSignal(null)}
                         className="no-tap h-12 w-12 flex items-center justify-center rounded-2xl border border-border bg-surface text-muted-foreground transition active:scale-[0.98] font-bold"
@@ -284,8 +454,12 @@ function DiscoverPage() {
                     className="rounded-3xl border border-border/40 bg-surface-2/30 p-5 text-center flex flex-col items-center justify-center py-8"
                   >
                     <Users className="h-6 w-6 text-muted-foreground/60 mb-2" />
-                    <p className="text-sm font-medium text-muted-foreground">Tap a signal on the radar grid</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">See distances, vibe tags, and send waves instantly.</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Tap a signal on the radar grid
+                    </p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">
+                      See distances, vibe tags, and send waves instantly.
+                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>

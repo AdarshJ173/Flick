@@ -83,6 +83,18 @@ export type Database = {
           id: string;
           updated_at: string;
           vibe: string | null;
+          photo_verified: boolean;
+          linkedin_url: string | null;
+          instagram_url: string | null;
+          website_url: string | null;
+          age_verified: boolean;
+          birth_date: string | null;
+          dpdp_consent_location: boolean;
+          dpdp_consent_profile: boolean;
+          dpdp_consent_timestamp: string | null;
+          interests: string[];
+          discoverable: boolean;
+          max_radius_m: number;
         };
         Insert: {
           avatar_emoji?: string;
@@ -91,6 +103,18 @@ export type Database = {
           id: string;
           updated_at?: string;
           vibe?: string | null;
+          photo_verified?: boolean;
+          linkedin_url?: string | null;
+          instagram_url?: string | null;
+          website_url?: string | null;
+          age_verified?: boolean;
+          birth_date?: string | null;
+          dpdp_consent_location?: boolean;
+          dpdp_consent_profile?: boolean;
+          dpdp_consent_timestamp?: string | null;
+          interests?: string[];
+          discoverable?: boolean;
+          max_radius_m?: number;
         };
         Update: {
           avatar_emoji?: string;
@@ -99,6 +123,18 @@ export type Database = {
           id?: string;
           updated_at?: string;
           vibe?: string | null;
+          photo_verified?: boolean;
+          linkedin_url?: string | null;
+          instagram_url?: string | null;
+          website_url?: string | null;
+          age_verified?: boolean;
+          birth_date?: string | null;
+          dpdp_consent_location?: boolean;
+          dpdp_consent_profile?: boolean;
+          dpdp_consent_timestamp?: string | null;
+          interests?: string[];
+          discoverable?: boolean;
+          max_radius_m?: number;
         };
         Relationships: [];
       };
@@ -190,6 +226,120 @@ export type Database = {
             columns: ["signal_id"];
             isOneToOne: false;
             referencedRelation: "signals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      blocks: {
+        Row: {
+          blocker_id: string;
+          blocked_id: string;
+          created_at: string;
+        };
+        Insert: {
+          blocker_id: string;
+          blocked_id: string;
+          created_at?: string;
+        };
+        Update: {
+          blocker_id?: string;
+          blocked_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocker_id_fkey";
+            columns: ["blocker_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "blocks_blocked_id_fkey";
+            columns: ["blocked_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          reported_id: string;
+          reason: string;
+          details: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          reported_id: string;
+          reason: string;
+          details?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string;
+          reported_id?: string;
+          reason?: string;
+          details?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey";
+            columns: ["reporter_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reports_reported_id_fkey";
+            columns: ["reported_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      verification_requests: {
+        Row: {
+          id: string;
+          requester_id: string;
+          recipient_id: string;
+          platform: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          requester_id: string;
+          recipient_id: string;
+          platform: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          requester_id?: string;
+          recipient_id?: string;
+          platform?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "verification_requests_requester_id_fkey";
+            columns: ["requester_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "verification_requests_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -511,6 +661,27 @@ export type Database = {
           note: string;
           place_label: string;
         }[];
+      };
+      block_user: {
+        Args: { in_blocked_id: string };
+        Returns: undefined;
+      };
+      unblock_user: {
+        Args: { in_blocked_id: string };
+        Returns: undefined;
+      };
+      get_blocked_users: {
+        Args: never;
+        Returns: {
+          blocked_id: string;
+          display_name: string;
+          avatar_emoji: string;
+          blocked_at: string;
+        }[];
+      };
+      count_nearby_signals: {
+        Args: { in_lat: number; in_lng: number; in_search_radius_m?: number };
+        Returns: number;
       };
       gettransactionid: { Args: never; Returns: unknown };
       longtransactionsenabled: { Args: never; Returns: boolean };
