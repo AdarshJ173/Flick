@@ -32,9 +32,15 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY =
+  let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  let SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+
+  // Force override to the correct project if it points to the old one or is missing
+  if (!SUPABASE_URL || SUPABASE_URL.includes("wlpiqocwxwxhnchgpqpx")) {
+    SUPABASE_URL = "https://nqtwslncjxbekupkvazu.supabase.co";
+    SUPABASE_PUBLISHABLE_KEY = "sb_publishable_RZvA8bEJjN5txSn6ZzSyVA_e7Qm8xc3";
+  }
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
