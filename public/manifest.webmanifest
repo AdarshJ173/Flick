@@ -1,0 +1,14 @@
+{
+  "name": "Flick — Be here. Find people.",
+  "short_name": "Flick",
+  "description": "Broadcast that you're here and open. Find people nearby who said yes too.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1d24",
+  "theme_color": "#caff33",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
