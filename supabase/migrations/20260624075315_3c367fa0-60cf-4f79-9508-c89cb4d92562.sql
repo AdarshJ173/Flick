@@ -1,4 +1,11 @@
 
+-- Drop conflicting database objects if they exist
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.wave_on_signal(UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.get_nearby_signals(DOUBLE PRECISION, DOUBLE PRECISION, INT) CASCADE;
+DROP TABLE IF EXISTS public.messages, public.matches, public.waves, public.signals, public.profiles CASCADE;
+
 -- Extensions
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
