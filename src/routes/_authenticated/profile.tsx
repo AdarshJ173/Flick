@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/flick/app-shell";
-import { LogOut, Check } from "lucide-react";
+import { LogOut, Check, Settings } from "lucide-react";
 import { cn, getAvatarStyle } from "@/lib/utils";
 
 const EMOJI_CHOICES = [
@@ -71,12 +71,22 @@ function ProfilePage() {
   return (
     <AppShell>
       <div className="px-5 pt-12">
-        <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          Profile
-        </div>
-        <h1 className="font-display mt-2 text-4xl leading-none tracking-tight">
-          The you <span className="italic text-primary">people see</span>.
-        </h1>
+        <header className="flex justify-between items-start">
+          <div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Profile
+            </div>
+            <h1 className="font-display mt-2 text-4xl leading-none tracking-tight">
+              The you <span className="italic text-primary">people see</span>.
+            </h1>
+          </div>
+          <button
+            onClick={() => navigate({ to: "/settings" })}
+            className="no-tap -m-2 rounded-full p-2 text-muted-foreground hover:text-foreground active:scale-90"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </header>
         <p className="mt-2 text-sm text-muted-foreground">
           Only revealed to people you both said yes to.
         </p>

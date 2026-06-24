@@ -23,6 +23,7 @@ function MatchPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [keptTouch, setKeptTouch] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +62,15 @@ function MatchPage() {
       setOther(p ?? { display_name: "Someone", avatar_emoji: "gradient-2" });
       setIntent(s?.intent ?? "");
       setMessages(msgs ?? []);
+
+      // Load keep in touch status
+      const { data: keepData } = await (supabase as any)
+        .from("match_keep_in_touch")
+        .select("user_id")
+        .eq("match_id", matchId);
+      if (keepData) {
+        setKeptTouch(keepData.some((row: any) => row.user_id === u.user.id));
+      }
     })();
   }, [matchId, navigate]);
 
@@ -88,6 +98,29 @@ function MatchPage() {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  async function toggleKeepTouch() {
+    if (!uid || keptTouch) return;
+    try {
+      const { error } = await (supabase as any)
+        .from("match_keep_in_touch")
+        .insert({ match_id: matchId, user_id: uid });
+      if (error) throw error;
+      setKeptTouch(true);
+      toast.success("Interest sent. If it's mutual, connection is permanent.");
+
+      // Check if both users kept touch to celebrate!
+      const { data: currentKept } = await (supabase as any)
+        .from("match_keep_in_touch")
+        .select("user_id")
+        .eq("match_id", matchId);
+      if (currentKept && currentKept.length === 2) {
+        toast.success("Mutual! You are now permanently connected.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save decision");
+    }
+  }
 
   async function send() {
     if (!draft.trim() || !uid) return;
@@ -126,7 +159,7 @@ function MatchPage() {
             {other?.display_name ?? "—"}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <intentObj.icon className="h-3.5 w-3.5 text-muted-foreground" /> open to {intentObj.label.toLowerCase()}
+            <intentObj.icon className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} /> open to {intentObj.label.toLowerCase()}
           </div>
         </div>
         <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm whitespace-nowrap">
@@ -157,6 +190,28 @@ function MatchPage() {
           <Bubble key={m.id} mine={m.sender_id === uid} body={m.body} time={m.created_at} />
         ))}
       </div>
+
+      {/* Keep in Touch Prompt widget */}
+      {!expired && (
+        <div className="mx-4 mb-2 p-3 rounded-2xl bg-surface border border-border flex items-center justify-between shadow-sm">
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-foreground">Enjoying the vibe?</span>
+            <span className="text-[10px] text-muted-foreground">Keep in touch permanently.</span>
+          </div>
+          <button
+            onClick={toggleKeepTouch}
+            disabled={keptTouch}
+            className={cn(
+              "no-tap px-3 py-1.5 rounded-xl text-xs font-semibold transition active:scale-95",
+              keptTouch
+                ? "bg-primary/20 text-primary border border-primary/20"
+                : "bg-primary text-primary-foreground"
+            )}
+          >
+            {keptTouch ? "Requested" : "Keep in touch ❤️"}
+          </button>
+        </div>
+      )}
 
       {/* Composer */}
       <div className="sticky bottom-0 z-10 bg-background/80 px-3 pt-2 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur">

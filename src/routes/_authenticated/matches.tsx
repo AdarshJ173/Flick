@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ type Row = {
 function MatchesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function load() {
     try {
@@ -116,6 +117,27 @@ function MatchesPage() {
             Each one disappears after 2 hours. Use them.
           </p>
         </header>
+
+        <div className="mt-6 flex border-b border-border">
+          <Link
+            to="/matches"
+            className={cn(
+              "flex-1 pb-3 text-center text-sm font-semibold border-b-2 transition-colors",
+              pathname === "/matches" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+            )}
+          >
+            Active
+          </Link>
+          <Link
+            to="/connections"
+            className={cn(
+              "flex-1 pb-3 text-center text-sm font-semibold border-b-2 transition-colors",
+              pathname === "/connections" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+            )}
+          >
+            Permanent
+          </Link>
+        </div>
 
         {loading ? (
           <ul className="mt-8 space-y-3">

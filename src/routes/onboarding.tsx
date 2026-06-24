@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LivePulse } from "@/components/flick/live-pulse";
-import { ShieldCheck, MapPin, Bell, ChevronRight } from "lucide-react";
+import { ShieldCheck, MapPin, Bell, ChevronRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/onboarding")({

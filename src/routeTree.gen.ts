@@ -14,11 +14,13 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNearbyRouteImport } from './routes/_authenticated/nearby'
 import { Route as AuthenticatedMatchesRouteImport } from './routes/_authenticated/matches'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
+import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
 import { Route as AuthenticatedMatchMatchIdRouteImport } from './routes/_authenticated/match.$matchId'
 
 const SetupRoute = SetupRouteImport.update({
@@ -45,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -70,6 +77,12 @@ const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
   path: '/discover',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedConnectionsRoute =
+  AuthenticatedConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMatchMatchIdRoute =
   AuthenticatedMatchMatchIdRouteImport.update({
     id: '/match/$matchId',
@@ -82,11 +95,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
+  '/connections': typeof AuthenticatedConnectionsRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/home': typeof AuthenticatedHomeRoute
   '/matches': typeof AuthenticatedMatchesRoute
   '/nearby': typeof AuthenticatedNearbyRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
 }
 export interface FileRoutesByTo {
@@ -94,11 +109,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
+  '/connections': typeof AuthenticatedConnectionsRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/home': typeof AuthenticatedHomeRoute
   '/matches': typeof AuthenticatedMatchesRoute
   '/nearby': typeof AuthenticatedNearbyRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
 }
 export interface FileRoutesById {
@@ -108,11 +125,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
   '/setup': typeof SetupRoute
+  '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/matches': typeof AuthenticatedMatchesRoute
   '/_authenticated/nearby': typeof AuthenticatedNearbyRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/match/$matchId': typeof AuthenticatedMatchMatchIdRoute
 }
 export interface FileRouteTypes {
@@ -122,11 +141,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/setup'
+    | '/connections'
     | '/discover'
     | '/home'
     | '/matches'
     | '/nearby'
     | '/profile'
+    | '/settings'
     | '/match/$matchId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -134,11 +155,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/setup'
+    | '/connections'
     | '/discover'
     | '/home'
     | '/matches'
     | '/nearby'
     | '/profile'
+    | '/settings'
     | '/match/$matchId'
   id:
     | '__root__'
@@ -147,11 +170,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/setup'
+    | '/_authenticated/connections'
     | '/_authenticated/discover'
     | '/_authenticated/home'
     | '/_authenticated/matches'
     | '/_authenticated/nearby'
     | '/_authenticated/profile'
+    | '/_authenticated/settings'
     | '/_authenticated/match/$matchId'
   fileRoutesById: FileRoutesById
 }
@@ -200,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -235,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDiscoverRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/connections': {
+      id: '/_authenticated/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof AuthenticatedConnectionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/match/$matchId': {
       id: '/_authenticated/match/$matchId'
       path: '/match/$matchId'
@@ -246,20 +285,24 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMatchesRoute: typeof AuthenticatedMatchesRoute
   AuthenticatedNearbyRoute: typeof AuthenticatedNearbyRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedMatchMatchIdRoute: typeof AuthenticatedMatchMatchIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMatchesRoute: AuthenticatedMatchesRoute,
   AuthenticatedNearbyRoute: AuthenticatedNearbyRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedMatchMatchIdRoute: AuthenticatedMatchMatchIdRoute,
 }
 
