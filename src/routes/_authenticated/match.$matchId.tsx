@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { intentByKey } from "@/lib/intents";
 import { ArrowLeft, Send } from "lucide-react";
+import { cn, getAvatarStyle } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/match/$matchId")({
   component: MatchPage,
@@ -27,30 +28,56 @@ function MatchPage() {
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { navigate({ to: "/auth" }); return; }
+      if (!u.user) {
+        navigate({ to: "/auth" });
+        return;
+      }
       setUid(u.user.id);
-      const { data: m } = await supabase.from("matches").select("user_a,user_b,signal_id,expires_at").eq("id", matchId).maybeSingle();
-      if (!m) { toast.error("Match not found"); navigate({ to: "/matches" }); return; }
+      const { data: m } = await supabase
+        .from("matches")
+        .select("user_a,user_b,signal_id,expires_at")
+        .eq("id", matchId)
+        .maybeSingle();
+      if (!m) {
+        toast.error("Match not found");
+        navigate({ to: "/matches" });
+        return;
+      }
       setExpiresAt(m.expires_at);
       const otherId = m.user_a === u.user.id ? m.user_b : m.user_a;
       const [{ data: p }, { data: s }, { data: msgs }] = await Promise.all([
-        supabase.from("profiles").select("display_name,avatar_emoji").eq("id", otherId).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("display_name,avatar_emoji")
+          .eq("id", otherId)
+          .maybeSingle(),
         supabase.from("signals").select("intent").eq("id", m.signal_id).maybeSingle(),
-        supabase.from("messages").select("id,sender_id,body,created_at").eq("match_id", matchId).order("created_at", { ascending: true }),
+        supabase
+          .from("messages")
+          .select("id,sender_id,body,created_at")
+          .eq("match_id", matchId)
+          .order("created_at", { ascending: true }),
       ]);
-      setOther(p ?? { display_name: "Someone", avatar_emoji: "✨" });
+      setOther(p ?? { display_name: "Someone", avatar_emoji: "gradient-2" });
       setIntent(s?.intent ?? "");
       setMessages(msgs ?? []);
     })();
   }, [matchId, navigate]);
 
   useEffect(() => {
-    const channel = supabase.channel(`match-${matchId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` }, (payload) => {
-        setMessages((arr) => [...arr, payload.new as Msg]);
-      })
+    const channel = supabase
+      .channel(`match-${matchId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
+        (payload) => {
+          setMessages((arr) => [...arr, payload.new as Msg]);
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [matchId]);
 
   useEffect(() => {
@@ -66,8 +93,13 @@ function MatchPage() {
     if (!draft.trim() || !uid) return;
     const body = draft.trim();
     setDraft("");
-    const { error } = await supabase.from("messages").insert({ match_id: matchId, sender_id: uid, body });
-    if (error) { toast.error(error.message); setDraft(body); }
+    const { error } = await supabase
+      .from("messages")
+      .insert({ match_id: matchId, sender_id: uid, body });
+    if (error) {
+      toast.error(error.message);
+      setDraft(body);
+    }
   }
 
   const intentObj = intentByKey(intent);
@@ -80,28 +112,38 @@ function MatchPage() {
     <div className="relative mx-auto flex h-screen w-full max-w-md flex-col bg-background">
       {/* Header */}
       <header className="glass sticky top-0 z-20 flex items-center gap-3 px-4 py-3">
-        <button onClick={() => navigate({ to: "/matches" })} className="no-tap -m-2 rounded-full p-2 text-muted-foreground active:scale-90">
+        <button
+          onClick={() => navigate({ to: "/matches" })}
+          className="no-tap -m-2 rounded-full p-2 text-muted-foreground active:scale-90"
+        >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-xl">
-          {other?.avatar_emoji ?? "✨"}
+        <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl text-base font-bold shadow-sm", getAvatarStyle(other?.avatar_emoji ?? ""))}>
+          {(other?.display_name ?? "S").charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-display truncate text-base leading-tight">{other?.display_name ?? "—"}</div>
+          <div className="font-display truncate text-base leading-tight">
+            {other?.display_name ?? "—"}
+          </div>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span>{intentObj.emoji}</span> open to {intentObj.label.toLowerCase()}
+            <intentObj.icon className="h-3.5 w-3.5 text-muted-foreground" /> open to {intentObj.label.toLowerCase()}
           </div>
         </div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm">{expired ? "ended" : `${mins}m left`}</div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-warm whitespace-nowrap">
+          {expired ? "ended" : `${mins}m left`}
+        </div>
       </header>
 
       {/* Reveal banner */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
         className="mx-4 mt-3 rounded-2xl border border-warm/30 bg-warm/10 px-4 py-3 text-center"
       >
         <div className="font-display text-lg leading-tight text-warm">It's mutual.</div>
-        <div className="mt-0.5 text-xs text-muted-foreground">You both said yes. Say something — the chat ends in {mins} min.</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          You both said yes. Say something — the chat ends in {mins} min.
+        </div>
       </motion.div>
 
       {/* Messages */}
@@ -119,13 +161,21 @@ function MatchPage() {
       {/* Composer */}
       <div className="sticky bottom-0 z-10 bg-background/80 px-3 pt-2 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur">
         <form
-          onSubmit={(e) => { e.preventDefault(); send(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
           className="flex items-end gap-2"
         >
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
             placeholder={expired ? "Chat has ended" : "Say something real…"}
             disabled={expired}
             rows={1}

@@ -19,7 +19,9 @@ function NotFoundComponent() {
       <div className="max-w-sm text-center">
         <h1 className="font-display text-8xl text-primary">404</h1>
         <h2 className="mt-2 text-lg font-medium text-foreground">Nothing here.</h2>
-        <p className="mt-2 text-sm text-muted-foreground">This place is empty. Go where people are.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This place is empty. Go where people are.
+        </p>
         <Link
           to="/"
           className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
@@ -41,9 +43,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="max-w-sm text-center">
         <h1 className="font-display text-3xl text-foreground">Something flickered.</h1>
-        <p className="mt-2 text-sm text-muted-foreground">It happens. Try again — you're almost there.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          It happens. Try again — you're almost there.
+        </p>
         <button
-          onClick={() => { router.invalidate(); reset(); }}
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
           className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
         >
           Try again
@@ -57,14 +64,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no",
+      },
       { name: "theme-color", content: "#caff33" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Flick" },
       { title: "Flick — Be here. Find people." },
-      { name: "description", content: "Broadcast that you're here and open. People nearby who said yes too show up. Zero rejection. Pure serendipity." },
+      {
+        name: "description",
+        content:
+          "Broadcast that you're here and open. People nearby who said yes too show up. Zero rejection. Pure serendipity.",
+      },
       { property: "og:title", content: "Flick — Be here. Find people." },
       { property: "og:description", content: "The ambient social layer for physical reality." },
       { property: "og:type", content: "website" },
@@ -89,9 +103,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <head><HeadContent /></head>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+      </head>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
@@ -99,8 +115,23 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { supabase } from "@/integrations/supabase/client";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      router.invalidate();
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

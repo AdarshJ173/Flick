@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Radio, Users, MessageCircle, UserRound } from "lucide-react";
+import { Radio, Users, MessageCircle, UserRound, Compass } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = [
     { to: "/home", label: "Live", icon: Radio },
+    { to: "/discover", label: "Radar", icon: Compass },
     { to: "/nearby", label: "Nearby", icon: Users },
     { to: "/matches", label: "Matches", icon: MessageCircle },
     { to: "/profile", label: "You", icon: UserRound },
@@ -31,15 +32,13 @@ function BottomNav() {
               key={to}
               to={to}
               className={cn(
-                "group relative flex flex-1 flex-col items-center gap-1 rounded-xl px-3 py-2 text-[10px] font-medium tracking-wide uppercase transition-colors",
+                "group relative flex flex-1 flex-col items-center gap-1 rounded-xl px-1.5 py-2 text-[9px] font-medium tracking-wide uppercase transition-colors",
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
+              <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.4 : 1.8} />
               <span>{label}</span>
-              {active && (
-                <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-primary" />
-              )}
+              {active && <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-primary" />}
             </Link>
           );
         })}

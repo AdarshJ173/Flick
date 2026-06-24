@@ -33,7 +33,9 @@ function NearbyPage() {
 
   const fetchSignals = useCallback(async (p: { lat: number; lng: number }) => {
     const { data, error } = await supabase.rpc("get_nearby_signals", {
-      in_lat: p.lat, in_lng: p.lng, in_search_radius_m: 2000,
+      in_lat: p.lat,
+      in_lng: p.lng,
+      in_search_radius_m: 2000,
     });
     if (error) {
       toast.error(error.message);
@@ -73,14 +75,16 @@ function NearbyPage() {
         fetchSignals(pos);
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [pos, fetchSignals]);
 
   async function wave(signal: NearbySignal) {
     if (signal.is_mine || signal.already_waved) return;
     const { data, error } = await supabase.rpc("wave_on_signal", { in_signal_id: signal.id });
     if (error) return toast.error(error.message);
-    setSignals((arr) => arr.map((s) => s.id === signal.id ? { ...s, already_waved: true } : s));
+    setSignals((arr) => arr.map((s) => (s.id === signal.id ? { ...s, already_waved: true } : s)));
     toast.success("It's mutual. Go say hi.", { duration: 3500 });
     if (data) navigate({ to: "/match/$matchId", params: { matchId: data as string } });
   }
@@ -92,21 +96,25 @@ function NearbyPage() {
           <div>
             <div className="flex items-center gap-2">
               <Radar className="h-4 w-4 text-primary" />
-              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Nearby</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Nearby
+              </span>
             </div>
-            <h1 className="font-display mt-2 text-4xl leading-none tracking-tight">Within reach.</h1>
+            <h1 className="font-display mt-2 text-4xl leading-none tracking-tight">
+              Within reach.
+            </h1>
           </div>
-          <span className="font-mono text-xs text-muted-foreground">{signals.filter(s => !s.is_mine).length} signal{signals.filter(s => !s.is_mine).length === 1 ? "" : "s"}</span>
+          <span className="font-mono text-xs text-muted-foreground">
+            {signals.filter((s) => !s.is_mine).length} signal
+            {signals.filter((s) => !s.is_mine).length === 1 ? "" : "s"}
+          </span>
         </header>
 
         {permissionError ? (
-          <EmptyState
-            title="Location off"
-            body={permissionError}
-          />
+          <EmptyState title="Location off" body={permissionError} />
         ) : loading ? (
           <ShimmerList />
-        ) : signals.filter(s => !s.is_mine).length === 0 ? (
+        ) : signals.filter((s) => !s.is_mine).length === 0 ? (
           <EmptyState
             title="It's quiet around here."
             body="No one nearby has flicked yet. Try going live — others will see you and might join."
@@ -114,9 +122,11 @@ function NearbyPage() {
         ) : (
           <ul className="mt-8 space-y-3">
             <AnimatePresence initial={false}>
-              {signals.filter(s => !s.is_mine).map((s, i) => (
-                <SignalCard key={s.id} signal={s} index={i} onWave={() => wave(s)} />
-              ))}
+              {signals
+                .filter((s) => !s.is_mine)
+                .map((s, i) => (
+                  <SignalCard key={s.id} signal={s} index={i} onWave={() => wave(s)} />
+                ))}
             </AnimatePresence>
           </ul>
         )}
@@ -125,13 +135,22 @@ function NearbyPage() {
   );
 }
 
-function SignalCard({ signal, index, onWave }: { signal: NearbySignal; index: number; onWave: () => void }) {
+function SignalCard({
+  signal,
+  index,
+  onWave,
+}: {
+  signal: NearbySignal;
+  index: number;
+  onWave: () => void;
+}) {
   const intent = intentByKey(signal.intent);
-  const distLabel = signal.distance_m < 80
-    ? "right next to you"
-    : signal.distance_m < 1000
-      ? `${Math.round(signal.distance_m / 10) * 10}m away`
-      : `${(signal.distance_m / 1000).toFixed(1)}km away`;
+  const distLabel =
+    signal.distance_m < 80
+      ? "right next to you"
+      : signal.distance_m < 1000
+        ? `${Math.round(signal.distance_m / 10) * 10}m away`
+        : `${(signal.distance_m / 1000).toFixed(1)}km away`;
 
   return (
     <motion.li
@@ -143,19 +162,21 @@ function SignalCard({ signal, index, onWave }: { signal: NearbySignal; index: nu
       className="relative overflow-hidden rounded-3xl border border-border bg-surface p-5"
     >
       <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-surface-2 text-2xl">
-          {intent.emoji}
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <intent.icon className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-display text-xl leading-tight">{intent.label}</h3>
+            <h3 className="font-display text-xl leading-tight whitespace-nowrap overflow-hidden text-ellipsis">{intent.label}</h3>
             <LivePulse size={6} />
           </div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3" /> {distLabel}
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+            <MapPin className="h-3 w-3 shrink-0" /> {distLabel}
           </div>
           {signal.note && (
-            <p className="mt-2.5 text-[14px] leading-relaxed text-foreground/90 line-clamp-3">"{signal.note}"</p>
+            <p className="mt-2.5 text-[14px] leading-relaxed text-foreground/90 line-clamp-3">
+              "{signal.note}"
+            </p>
           )}
         </div>
       </div>
@@ -178,10 +199,7 @@ function SignalCard({ signal, index, onWave }: { signal: NearbySignal; index: nu
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      className="mt-20 text-center"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-20 text-center">
       <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surface">
         <Radar className="h-9 w-9 text-muted-foreground" />
       </div>
@@ -194,7 +212,7 @@ function EmptyState({ title, body }: { title: string; body: string }) {
 function ShimmerList() {
   return (
     <ul className="mt-8 space-y-3">
-      {[0,1,2].map(i => (
+      {[0, 1, 2].map((i) => (
         <li key={i} className="h-32 animate-pulse rounded-3xl border border-border bg-surface" />
       ))}
     </ul>

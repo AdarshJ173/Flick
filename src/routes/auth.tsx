@@ -25,7 +25,8 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email,
+          password,
           options: {
             emailRedirectTo: window.location.origin + "/home",
             data: { display_name: name || email.split("@")[0] },
@@ -48,8 +49,11 @@ function AuthPage() {
   async function handleGoogle() {
     setBusy(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/home" });
-      if (result.error) throw result.error instanceof Error ? result.error : new Error(String(result.error));
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + "/home",
+      });
+      if (result.error)
+        throw result.error instanceof Error ? result.error : new Error(String(result.error));
       if (result.redirected) return;
       navigate({ to: "/home" });
     } catch (err) {
@@ -74,14 +78,18 @@ function AuthPage() {
         >
           <div className="flex items-center gap-2">
             <LivePulse size={10} />
-            <span className="text-xs font-mono tracking-[0.18em] uppercase text-muted-foreground">Flick</span>
+            <span className="text-xs font-mono tracking-[0.18em] uppercase text-muted-foreground">
+              Flick
+            </span>
           </div>
           <h1 className="font-display mt-8 text-[clamp(2.5rem,9vw,3.75rem)] leading-[0.95] tracking-tight text-foreground">
-            Be here.<br />
+            Be here.
+            <br />
             <span className="italic text-primary">Find people.</span>
           </h1>
           <p className="mt-4 max-w-[28ch] text-base text-muted-foreground">
-            Broadcast that you're here and open. People nearby who said yes too show up. No rejection. No profiles to swipe.
+            Broadcast that you're here and open. People nearby who said yes too show up. No
+            rejection. No profiles to swipe.
           </p>
         </motion.div>
 
@@ -157,7 +165,11 @@ function AuthPage() {
 }
 
 function Field({
-  label, value, onChange, type = "text", ...rest
+  label,
+  value,
+  onChange,
+  type = "text",
+  ...rest
 }: {
   label: string;
   value: string;
@@ -169,7 +181,9 @@ function Field({
 }) {
   return (
     <label className="group block">
-      <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </span>
       <input
         type={type}
         value={value}
@@ -184,10 +198,22 @@ function Field({
 function GoogleMark() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#FFC107" d="M21.8 10.2H12v3.8h5.6c-.6 2.6-2.8 4-5.6 4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.5 0 2.9.6 4 1.5l2.7-2.7C16.9 3.2 14.6 2.2 12 2.2 6.5 2.2 2 6.7 2 12.2s4.5 10 10 10c5.7 0 9.8-4 9.8-10 0-.7-.1-1.4-.2-2z"/>
-      <path fill="#FF3D00" d="M3.2 7.3l3.2 2.4C7.3 7.7 9.5 6.2 12 6.2c1.5 0 2.9.6 4 1.5l2.7-2.7C16.9 3.2 14.6 2.2 12 2.2 8.2 2.2 4.9 4.3 3.2 7.3z"/>
-      <path fill="#4CAF50" d="M12 22.2c2.6 0 4.9-1 6.6-2.6l-3-2.5c-.9.7-2.1 1.1-3.6 1.1-2.8 0-5-1.8-5.7-4.3l-3.2 2.5c1.6 3.2 4.9 5.8 8.9 5.8z"/>
-      <path fill="#1976D2" d="M21.8 10.2H12v3.8h5.6c-.3 1.3-1 2.4-2 3.2l3 2.5c-.2.2 3.4-2.4 3.4-7.5 0-.7-.1-1.4-.2-2z"/>
+      <path
+        fill="#FFC107"
+        d="M21.8 10.2H12v3.8h5.6c-.6 2.6-2.8 4-5.6 4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.5 0 2.9.6 4 1.5l2.7-2.7C16.9 3.2 14.6 2.2 12 2.2 6.5 2.2 2 6.7 2 12.2s4.5 10 10 10c5.7 0 9.8-4 9.8-10 0-.7-.1-1.4-.2-2z"
+      />
+      <path
+        fill="#FF3D00"
+        d="M3.2 7.3l3.2 2.4C7.3 7.7 9.5 6.2 12 6.2c1.5 0 2.9.6 4 1.5l2.7-2.7C16.9 3.2 14.6 2.2 12 2.2 8.2 2.2 4.9 4.3 3.2 7.3z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M12 22.2c2.6 0 4.9-1 6.6-2.6l-3-2.5c-.9.7-2.1 1.1-3.6 1.1-2.8 0-5-1.8-5.7-4.3l-3.2 2.5c1.6 3.2 4.9 5.8 8.9 5.8z"
+      />
+      <path
+        fill="#1976D2"
+        d="M21.8 10.2H12v3.8h5.6c-.3 1.3-1 2.4-2 3.2l3 2.5c-.2.2 3.4-2.4 3.4-7.5 0-.7-.1-1.4-.2-2z"
+      />
     </svg>
   );
 }
