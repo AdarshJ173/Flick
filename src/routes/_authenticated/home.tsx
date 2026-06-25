@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/flick/app-shell";
 import { LivePulse } from "@/components/flick/live-pulse";
 import { MatchReveal } from "@/components/flick/match-reveal";
-import { INTENTS, intentByKey, type Intent } from "@/lib/intents";
+import { INTENTS, intentByKey, getContextualTemplates, trackUserPattern, type Intent } from "@/lib/intents";
 import { reverseGeocode, updateProfileLocation } from "@/lib/geocode";
 import {
   MapPin,
@@ -432,6 +432,7 @@ function HomePage() {
         .single();
       if (error) throw error;
       setActive(data);
+      trackUserPattern(intent.key, note.trim());
       fetchNearbyCount({ lat: p.lat, lng: p.lng });
       toast.success("You're live. People nearby can see your signal now.");
     } catch (err) {
@@ -660,6 +661,8 @@ function ComposerCard(props: {
     onGoLive,
   } = props;
 
+  const currentTemplates = getContextualTemplates(intent.key);
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 10 }}
@@ -697,12 +700,39 @@ function ComposerCard(props: {
          </div>
        </div>
 
+       {/* Suggestion templates pill row */}
+       {currentTemplates && currentTemplates.length > 0 && (
+         <div className="mt-3">
+           <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/80">
+             Suggestions:
+           </span>
+           <div className="mt-1.5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+             {currentTemplates.map((temp, index) => (
+               <button
+                 key={index}
+                 type="button"
+                 onClick={() => {
+                   haptics.light();
+                   setNote(temp);
+                 }}
+                 className={cn(
+                   "no-tap rounded-xl border border-border/80 bg-surface/50 px-3 py-1.5 text-xs text-muted-foreground transition active:scale-95 whitespace-nowrap hover:text-foreground hover:border-primary/20",
+                   note === temp ? "border-primary bg-primary/5 text-primary" : ""
+                 )}
+               >
+                 {temp.length > 35 ? temp.slice(0, 35) + "..." : temp}
+               </button>
+             ))}
+           </div>
+         </div>
+       )}
+
        <textarea
          value={note}
          onChange={(e) => setNote(e.target.value.slice(0, 140))}
          placeholder={intent.prompt}
          rows={2}
-         className="mt-5 w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+         className="mt-4 w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
        />
        <div className="mt-1 text-right text-[11px] text-muted-foreground">{note.length}/140</div>
 

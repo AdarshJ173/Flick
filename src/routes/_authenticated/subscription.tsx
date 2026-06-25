@@ -31,7 +31,7 @@ function SubscriptionPage() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentStep, setPaymentStep] = useState<"method" | "processing" | "success">("method");
-  const [selectedUPI, setSelectedUPI] = useState<string>("gpay");
+
 
   // Load subscription state from localStorage on mount
   useEffect(() => {
@@ -44,14 +44,75 @@ function SubscriptionPage() {
     setPaymentStep("method");
   };
 
-  const processPayment = () => {
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const processPayment = async () => {
     setPaymentStep("processing");
-    setTimeout(() => {
-      setPaymentStep("success");
-      localStorage.setItem("flick_plus_active", "true");
-      setIsSubscribed(true);
-      toast.success("Welcome to Flick Plus!");
-    }, 2200);
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      toast.error("Failed to load Razorpay payment gateway.");
+      setPaymentStep("method");
+      return;
+    }
+
+    let price = 149;
+    let desc = "Flick Plus Monthly Subscription";
+    if (selectedTier === "annual") {
+      price = 999;
+      desc = "Flick Plus Annual Subscription";
+    } else if (selectedTier === "credits") {
+      price = 49;
+      desc = "3 Signal Credits Pack";
+    }
+
+    const options = {
+      key: (import.meta as any).env.VITE_RAZORPAY_KEY_ID || "rzp_test_yB9jN7z2xZlU9c",
+      amount: price * 100,
+      currency: "INR",
+      name: "Flick Plus",
+      description: desc,
+      image: "/tlogo.svg",
+      handler: function (response: any) {
+        setPaymentStep("success");
+        localStorage.setItem("flick_plus_active", "true");
+        setIsSubscribed(true);
+        toast.success(selectedTier === "credits" ? "Credits loaded successfully!" : "Welcome to Flick Plus!");
+      },
+      modal: {
+        ondismiss: function () {
+          setPaymentStep("method");
+          toast.error("Payment cancelled.");
+        }
+      },
+      prefill: {
+        name: "Flick User",
+        email: "user@flick.social",
+        contact: "9999999999"
+      },
+      theme: {
+        color: "#F25C54"
+      }
+    };
+
+    try {
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      toast.error("Could not initialize Razorpay checkout.");
+      setPaymentStep("method");
+    }
   };
 
   const handleCancelSubscription = () => {
@@ -328,17 +389,34 @@ function SubscriptionPage() {
 
               {paymentStep === "method" && (
                 <>
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col items-center text-center space-y-2 py-2">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <ShieldCheck className="h-6 w-6" />
+                    </div>
                     <div>
                       <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-primary">
                         Secure Checkout
                       </span>
                       <h3 className="font-display text-2xl tracking-tight mt-1 text-foreground">
-                        Pay with UPI
+                        Confirm Payment
                       </h3>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs text-muted-foreground block">Amount</span>
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-background p-5 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">Product</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {selectedTier === "annual"
+                          ? "Flick Plus Annual"
+                          : selectedTier === "monthly"
+                            ? "Flick Plus Monthly"
+                            : "3 Signal Credits Pack"}
+                      </span>
+                    </div>
+                    <div className="h-px bg-border w-full" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">Amount Due</span>
                       <span className="font-mono text-lg font-bold text-primary">
                         {selectedTier === "annual"
                           ? "₹999.00"
@@ -347,44 +425,6 @@ function SubscriptionPage() {
                             : "₹49.00"}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Select UPI App
-                    </h4>
-
-                    {/* Google Pay */}
-                    <UPIOption
-                      id="gpay"
-                      name="Google Pay"
-                      selected={selectedUPI === "gpay"}
-                      onClick={() => setSelectedUPI("gpay")}
-                    />
-
-                    {/* PhonePe */}
-                    <UPIOption
-                      id="phonepe"
-                      name="PhonePe"
-                      selected={selectedUPI === "phonepe"}
-                      onClick={() => setSelectedUPI("phonepe")}
-                    />
-
-                    {/* Paytm */}
-                    <UPIOption
-                      id="paytm"
-                      name="Paytm"
-                      selected={selectedUPI === "paytm"}
-                      onClick={() => setSelectedUPI("paytm")}
-                    />
-
-                    {/* BHIM UPI */}
-                    <UPIOption
-                      id="bhim"
-                      name="BHIM UPI"
-                      selected={selectedUPI === "bhim"}
-                      onClick={() => setSelectedUPI("bhim")}
-                    />
                   </div>
 
                   <div className="flex gap-3">
@@ -398,13 +438,12 @@ function SubscriptionPage() {
                       onClick={processPayment}
                       className="no-tap flex-2 h-12 rounded-xl bg-primary text-xs font-semibold text-primary-foreground transition active:scale-[0.97]"
                     >
-                      Pay via UPI
+                      Proceed to Pay
                     </button>
                   </div>
 
                   <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Powered by Razorpay secure
-                    checkout.
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Powered by Razorpay secure checkout.
                   </p>
                 </>
               )}
@@ -415,7 +454,7 @@ function SubscriptionPage() {
                   <div className="space-y-1">
                     <h3 className="text-lg font-bold">Verifying payment…</h3>
                     <p className="text-xs text-muted-foreground">
-                      Confirming your transaction with the selected UPI network.
+                      Confirming your transaction with the payment gateway.
                     </p>
                   </div>
                 </div>
@@ -458,46 +497,6 @@ function BenefitItem({ text }: { text: string }) {
     <div className="flex items-center gap-2 text-xs text-foreground/90">
       <Check className="h-4 w-4 text-primary shrink-0" />
       <span>{text}</span>
-    </div>
-  );
-}
-
-function UPIOption({
-  id,
-  name,
-  selected,
-  onClick,
-}: {
-  id: string;
-  name: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className={`no-tap flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
-        selected
-          ? "border-primary bg-primary/5"
-          : "border-border bg-background hover:border-border/80"
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={`h-8 w-8 rounded-lg bg-surface flex items-center justify-center text-xs font-bold ${selected ? "text-primary border border-primary/30" : "text-muted-foreground border border-border"}`}
-        >
-          {id === "gpay" && <Smartphone className="h-4 w-4" />}
-          {id === "phonepe" && <CreditCard className="h-4 w-4" />}
-          {id === "paytm" && <QrCode className="h-4 w-4" />}
-          {id === "bhim" && <Sparkles className="h-4 w-4" />}
-        </div>
-        <span className="text-sm font-semibold text-foreground">{name}</span>
-      </div>
-      <div
-        className={`h-4.5 w-4.5 rounded-full border flex items-center justify-center transition-all ${selected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-transparent"}`}
-      >
-        {selected && <Check className="h-3 w-3 text-primary-foreground" />}
-      </div>
     </div>
   );
 }
