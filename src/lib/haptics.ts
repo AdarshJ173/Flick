@@ -7,7 +7,11 @@ export const haptics = {
    */
   light: () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(10);
+      try {
+        navigator.vibrate(10);
+      } catch (err) {
+        console.debug("Haptics blocked:", err);
+      }
     }
   },
 
@@ -16,7 +20,11 @@ export const haptics = {
    */
   medium: () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(35);
+      try {
+        navigator.vibrate(35);
+      } catch (err) {
+        console.debug("Haptics blocked:", err);
+      }
     }
   },
 
@@ -25,7 +33,11 @@ export const haptics = {
    */
   heavy: () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(70);
+      try {
+        navigator.vibrate(70);
+      } catch (err) {
+        console.debug("Haptics blocked:", err);
+      }
     }
   },
 
@@ -34,7 +46,11 @@ export const haptics = {
    */
   success: () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([40, 45, 40]);
+      try {
+        navigator.vibrate([40, 45, 40]);
+      } catch (err) {
+        console.debug("Haptics blocked:", err);
+      }
     }
   },
 
@@ -43,7 +59,11 @@ export const haptics = {
    */
   flick: () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([100, 60, 150]);
+      try {
+        navigator.vibrate([100, 60, 150]);
+      } catch (err) {
+        console.debug("Haptics blocked:", err);
+      }
     }
   },
 
@@ -52,7 +72,11 @@ export const haptics = {
    */
   error: () => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([50, 50, 50, 50, 100]);
+      try {
+        navigator.vibrate([50, 50, 50, 50, 100]);
+      } catch (err) {
+        console.debug("Haptics blocked:", err);
+      }
     }
   }
 };

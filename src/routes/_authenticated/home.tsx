@@ -284,17 +284,88 @@ function HomePage() {
   }, [uid]);
 
   useEffect(() => {
-    if (!pos) return;
+    if (!pos || !uid) return;
     const channel = supabase
       .channel("home-signals-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "signals" }, () => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "signals" }, async (payload) => {
+        fetchNearbyCount(pos);
+        
+        // Push notification logic for local fallback
+        const newSig = payload.new as {
+          id: string;
+          user_id: string;
+          intent: string;
+          note: string | null;
+          location: any;
+          radius_m: number;
+          active: boolean;
+        };
+
+        if (!newSig.active || newSig.user_id === uid) return;
+
+        // Try parsing location POINT coordinates (format: "POINT(lng lat)")
+        try {
+          let signalLat: number | null = null;
+          let signalLng: number | null = null;
+          
+          if (typeof newSig.location === "string") {
+            const match = newSig.location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/i);
+            if (match) {
+              signalLng = parseFloat(match[1]);
+              signalLat = parseFloat(match[2]);
+            }
+          }
+
+          if (signalLat !== null && signalLng !== null) {
+            // Compute distance in meters (haversine formula helper)
+            const R = 6371e3; // metres
+            const φ1 = (pos.lat * Math.PI) / 180;
+            const φ2 = (signalLat * Math.PI) / 180;
+            const Δφ = ((signalLat - pos.lat) * Math.PI) / 180;
+            const Δλ = ((signalLng - pos.lng) * Math.PI) / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+
+            // Trigger notification if within their radius or search radius
+            const targetRadius = newSig.radius_m || 1000;
+            if (distance <= targetRadius) {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("display_name")
+                .eq("id", newSig.user_id)
+                .maybeSingle();
+
+              const name = profile?.display_name || "Someone";
+              const intentLabel = intentByKey(newSig.intent).label.toLowerCase();
+
+              // Trigger native browser notification if granted
+              if (Notification.permission === "granted" && "serviceWorker" in navigator) {
+                const reg = await navigator.serviceWorker.ready;
+                reg.showNotification("Someone is Nearby!", {
+                  body: `${name} is open to "${intentLabel}" within ${Math.round(distance)}m of you!`,
+                  icon: "/icon-192.png",
+                  badge: "/tlogo.svg",
+                  vibrate: [100, 50, 100],
+                  data: { url: "/nearby" }
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.warn("Failed checking local notification delivery:", err);
+        }
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "signals" }, (payload) => {
         fetchNearbyCount(pos);
       })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [pos, fetchNearbyCount]);
+  }, [pos, uid, fetchNearbyCount]);
 
   useEffect(() => {
     if (!uid) return;
