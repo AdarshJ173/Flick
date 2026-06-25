@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -7,6 +7,22 @@ import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("age_verified")
+        .eq("id", data.session.user.id)
+        .maybeSingle();
+
+      if (profile && profile.age_verified) {
+        throw redirect({ to: "/home" });
+      } else {
+        throw redirect({ to: "/setup" });
+      }
+    }
+  },
   component: AuthPage,
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
