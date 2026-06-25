@@ -33,12 +33,22 @@ export async function subscribeToPush(): Promise<boolean> {
 
     // Check if already subscribed
     let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
+    
+    // If a subscription exists, unsubscribe it first to ensure we register fresh with our new key
+    if (sub) {
+      try {
+        await sub.unsubscribe();
+      } catch (unsubErr) {
+        console.warn("Failed to unsubscribe existing subscription:", unsubErr);
+      }
+      sub = null;
     }
+
+    // Always create a new subscription with our current VAPID key
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
