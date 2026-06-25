@@ -341,46 +341,44 @@ function ProfilePage() {
           Only revealed to people you both said yes to.
         </p>
 
-        <div className="mt-8 rounded-3xl border border-border bg-surface p-5 shadow-sm">
-          <div className="flex items-center gap-5">
-            <button
-              onClick={() => {
-                setTempEmoji(emoji);
-                setShowAvatarEditor(true);
+        <div className="mt-8 flex items-center gap-5">
+          <button
+            onClick={() => {
+              setTempEmoji(emoji);
+              setShowAvatarEditor(true);
+            }}
+            className="no-tap shrink-0 h-16 w-16 rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 active:scale-95 transition-transform border border-white/10"
+            title="Tap to change avatar"
+          >
+            <FlickAvatar
+              emoji={emoji}
+              name={name}
+              className="h-full w-full rounded-[inherit] text-xl shadow-sm"
+            />
+          </button>
+          <div className="flex-1 min-w-0 space-y-1">
+            <input
+              value={name}
+              onChange={(e) => {
+                const val = e.target.value;
+                setName(val);
+                autoSaveField("display_name", val);
               }}
-              className="no-tap shrink-0 h-16 w-16 rounded-3xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 active:scale-95 transition-transform"
-              title="Tap to change avatar"
-            >
-              <FlickAvatar
-                emoji={emoji}
-                name={name}
-                className="h-full w-full text-2xl shadow-sm"
-              />
-            </button>
-            <div className="flex-1 min-w-0 space-y-1">
-              <input
-                value={name}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setName(val);
-                  autoSaveField("display_name", val);
-                }}
-                placeholder="Your Name"
-                className="font-display text-2xl font-bold bg-transparent border-none focus:outline-none px-0 py-0 text-foreground placeholder:text-muted-foreground/60 w-full"
-              />
-              <input
-                value={vibe}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setVibe(val);
-                  autoSaveField("vibe", val);
-                }}
-                placeholder="Your vibe (one line)"
-                className="text-xs bg-transparent border-none focus:outline-none px-0 py-0 text-muted-foreground placeholder:text-muted-foreground/50 w-full"
-              />
-              <div className="text-[10px] text-muted-foreground/70 truncate pt-0.5">
-                {email}
-              </div>
+              placeholder="Your Name"
+              className="font-display text-2xl font-bold bg-transparent border-none focus:outline-none px-0 py-0 text-foreground placeholder:text-muted-foreground/60 w-full"
+            />
+            <input
+              value={vibe}
+              onChange={(e) => {
+                const val = e.target.value;
+                setVibe(val);
+                autoSaveField("vibe", val);
+              }}
+              placeholder="Your vibe (one line)"
+              className="text-xs bg-transparent border-none focus:outline-none px-0 py-0 text-muted-foreground placeholder:text-muted-foreground/50 w-full"
+            />
+            <div className="text-[10px] text-muted-foreground/70 truncate pt-0.5">
+              {email}
             </div>
           </div>
         </div>
@@ -474,6 +472,8 @@ function ProfilePage() {
           </div>
           <ChevronRight className="h-5 w-5 text-primary" />
         </motion.button>
+
+
 
         <div className="mt-5">
           <div className="flex items-center justify-between mb-3">
