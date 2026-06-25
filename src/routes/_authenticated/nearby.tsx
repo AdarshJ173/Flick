@@ -11,19 +11,20 @@ import { FlickAvatar } from "@/components/flick/avatar";
 import { cn } from "@/lib/utils";
 import { ChatProfileSheet, type ChatProfileUser } from "@/components/flick/chat-profile-sheet";
 import { haptics } from "@/lib/haptics";
+import { updateProfileLocation } from "@/lib/geocode";
 
 export const Route = createFileRoute("/_authenticated/nearby")({
   component: NearbyPage,
 });
 
 type NearbySignal = {
-  id: string;
+  id: string | null;
   user_id: string;
-  intent: string;
+  intent: string | null;
   note: string | null;
   place_label: string | null;
   distance_m: number;
-  expires_at: string;
+  expires_at: string | null;
   created_at: string;
   is_mine: boolean;
   already_waved: boolean;
@@ -68,13 +69,13 @@ function NearbyPage() {
     const enriched: NearbySignal[] = list.map((s) => {
       const profile = (profiles ?? []).find((p) => p.id === s.user_id) ?? {};
       return {
-        id: s.id as string,
+        id: (s.id as string | null) ?? null,
         user_id: (s.user_id as string) ?? "",
-        intent: s.intent as string,
+        intent: (s.intent as string | null) ?? null,
         note: (s.note as string | null) ?? null,
         place_label: (s.place_label as string | null) ?? null,
         distance_m: (s.distance_m as number) ?? 0,
-        expires_at: s.expires_at as string,
+        expires_at: (s.expires_at as string | null) ?? null,
         created_at: s.created_at as string,
         is_mine: !!s.is_mine,
         already_waved: !!s.already_waved,
@@ -111,6 +112,7 @@ function NearbyPage() {
       async (p) => {
         const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setPos(loc);
+        updateProfileLocation(loc.lat, loc.lng);
         await fetchSignals(loc);
         setLoading(false);
       },
@@ -243,7 +245,11 @@ function SignalCard({
   onWave: () => void;
   onOpenProfile: () => void;
 }) {
-  const intent = intentByKey(signal.intent);
+  const isLive = !!signal.intent;
+  const intent = isLive 
+    ? intentByKey(signal.intent!) 
+    : { key: "passive", label: "Nearby", icon: Radar, prompt: "" };
+
   const distLabel =
     signal.distance_m < 250
       ? "< 250m"
@@ -274,10 +280,14 @@ function SignalCard({
               name={signal.display_name}
               className={cn(
                 "h-12 w-12 rounded-2xl text-lg shadow-sm",
-                signal.photo_verified ? "live-glow" : "",
+                isLive && signal.photo_verified ? "live-glow" : "",
               )}
             />
-            <LivePulse size={6} className="absolute -bottom-0.5 -right-0.5" />
+            {isLive ? (
+              <LivePulse size={6} className="absolute -bottom-0.5 -right-0.5" />
+            ) : (
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-muted-foreground/60 border border-background" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
@@ -292,11 +302,14 @@ function SignalCard({
               )}
             </div>
             <p className="mt-0.5 line-clamp-1 text-[12px] text-muted-foreground">
-              {signal.vibe || `Open to ${intent.label.toLowerCase()}`}
+              {signal.vibe || (isLive ? `Open to ${intent.label.toLowerCase()}` : "Nearby recently")}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
-            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div className={cn(
+              "flex items-center gap-1 text-[10px] uppercase tracking-wider",
+              isLive ? "text-primary" : "text-muted-foreground"
+            )}>
               <intent.icon className="h-3.5 w-3.5" />
               <span>{intent.label}</span>
             </div>
@@ -313,19 +326,28 @@ function SignalCard({
       </button>
 
       <div className="px-5 pb-4">
-        <button
-          onClick={onWave}
-          disabled={signal.already_waved}
-          className={cn(
-            "no-tap flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition active:scale-[0.98]",
-            signal.already_waved
-              ? "bg-warm/15 text-warm border border-warm/30"
-              : "bg-primary text-primary-foreground",
-          )}
-        >
-          <Hand className={cn("h-4 w-4", signal.already_waved ? "" : "rotate-12")} />
-          {signal.already_waved ? "You waved" : "Wave"}
-        </button>
+        {isLive ? (
+          <button
+            onClick={onWave}
+            disabled={signal.already_waved}
+            className={cn(
+              "no-tap flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition active:scale-[0.98]",
+              signal.already_waved
+                ? "bg-warm/15 text-warm border border-warm/30"
+                : "bg-primary text-primary-foreground",
+            )}
+          >
+            <Hand className={cn("h-4 w-4", signal.already_waved ? "" : "rotate-12")} />
+            {signal.already_waved ? "You waved" : "Wave"}
+          </button>
+        ) : (
+          <button
+            onClick={onOpenProfile}
+            className="no-tap flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition bg-surface-2 border border-border text-muted-foreground hover:text-foreground hover:bg-surface-3"
+          >
+            <span>View Profile</span>
+          </button>
+        )}
       </div>
     </motion.li>
   );

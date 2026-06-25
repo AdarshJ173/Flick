@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FlickAvatar } from "@/components/flick/avatar";
 import { haptics } from "@/lib/haptics";
+import { updateProfileLocation } from "@/lib/geocode";
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: DiscoverPage,
@@ -66,7 +67,7 @@ function DiscoverPage() {
       toast.error(signalsError.message);
       return;
     }
-    const list = (signalsData as NearbySignal[]) ?? [];
+    const list = ((signalsData as NearbySignal[]) ?? []).filter(s => s.intent !== null && s.intent !== undefined);
 
     // Fetch related profile details to display Trust info
     if (list.length > 0) {
@@ -123,6 +124,7 @@ function DiscoverPage() {
         const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setPos(loc);
         setPermissionError(null);
+        updateProfileLocation(loc.lat, loc.lng);
         await fetchSignals(loc);
         setLoading(false);
       },

@@ -7,7 +7,7 @@ import { AppShell } from "@/components/flick/app-shell";
 import { LivePulse } from "@/components/flick/live-pulse";
 import { MatchReveal } from "@/components/flick/match-reveal";
 import { INTENTS, intentByKey, type Intent } from "@/lib/intents";
-import { reverseGeocode } from "@/lib/geocode";
+import { reverseGeocode, updateProfileLocation } from "@/lib/geocode";
 import {
   MapPin,
   X,
@@ -185,6 +185,7 @@ function HomePage() {
         const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
         setPos(loc);
         fetchNearbyCount(loc);
+        updateProfileLocation(loc.lat, loc.lng);
         if (!locationFetched.current) {
           locationFetched.current = true;
           const label = await reverseGeocode(loc.lat, loc.lng);
