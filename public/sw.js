@@ -78,3 +78,54 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+/* Real-time Push Notifications */
+self.addEventListener("push", (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data = { body: event.data.text() };
+    }
+  }
+
+  const title = data.title || "Flick";
+  const options = {
+    body: data.body || "Something is happening near you!",
+    icon: "/icon-192.png",
+    badge: "/tlogo.svg",
+    vibrate: [100, 50, 100],
+    data: {
+      url: data.url || "/"
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      // If a window is already open, focus it and navigate
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.focus();
+          if (client.url !== targetUrl) {
+            return client.navigate(targetUrl);
+          }
+          return;
+        }
+      }
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

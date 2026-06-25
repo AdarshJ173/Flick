@@ -18,10 +18,18 @@ import {
   RefreshCw,
   Hand,
   ArrowRight,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FlickAvatar } from "@/components/flick/avatar";
 import { haptics } from "@/lib/haptics";
+import {
+  checkNotificationPermission,
+  requestNotificationPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from "@/lib/push-service";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
@@ -67,6 +75,8 @@ function HomePage() {
   const [reveal, setReveal] = useState<PendingReveal | null>(null);
   const [uid, setUid] = useState<string | null>(null);
   const [recents, setRecents] = useState<RecentMatch[]>([]);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+  const [subscribed, setSubscribed] = useState(false);
   const [stats, setStats] = useState<{
     signals: number;
     matches: number;
@@ -177,6 +187,51 @@ function HomePage() {
       alive = false;
     };
   }, []);
+
+  useEffect(() => {
+    checkNotificationPermission().then((perm) => {
+      setNotificationPermission(perm);
+      if (perm === "granted") {
+        if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.pushManager.getSubscription().then((sub) => {
+              setSubscribed(!!sub);
+            });
+          });
+        }
+      }
+    });
+  }, []);
+
+  async function toggleNotifications() {
+    haptics.light();
+    if (notificationPermission !== "granted") {
+      const allowed = await requestNotificationPermission();
+      if (!allowed) {
+        toast.error("Enable notifications in browser settings to receive real-time updates.");
+        return;
+      }
+      setNotificationPermission("granted");
+    }
+
+    if (subscribed) {
+      const ok = await unsubscribeFromPush();
+      if (ok) {
+        setSubscribed(false);
+        toast("Notifications disabled.");
+      } else {
+        toast.error("Failed to disable notifications.");
+      }
+    } else {
+      const ok = await subscribeToPush();
+      if (ok) {
+        setSubscribed(true);
+        toast.success("Real-time notifications enabled!");
+      } else {
+        toast.error("Failed to enable notifications. Try reinstalling PWA.");
+      }
+    }
+  }
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -340,17 +395,33 @@ function HomePage() {
               Flick
             </span>
           </div>
-          {locationLabel && (
+          <div className="flex items-center gap-2 max-w-[70%]">
+            {locationLabel && (
+              <button
+                onClick={refreshLocation}
+                className="no-tap flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[11px] font-medium text-muted-foreground min-w-0 max-w-[150px] active:scale-95"
+                aria-label="Refresh location"
+              >
+                <Navigation className="h-3 w-3 shrink-0 text-primary" />
+                <span className="truncate">{locationLabel}</span>
+                <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
+              </button>
+            )}
             <button
-              onClick={refreshLocation}
-              className="no-tap flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[11px] font-medium text-muted-foreground max-w-[55%] active:scale-95"
-              aria-label="Refresh location"
+              onClick={toggleNotifications}
+              className={cn(
+                "no-tap flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground active:scale-95 transition-all",
+                subscribed ? "text-primary border-primary/30 bg-primary/5" : ""
+              )}
+              aria-label={subscribed ? "Disable push notifications" : "Enable push notifications"}
             >
-              <Navigation className="h-3 w-3 shrink-0 text-primary" />
-              <span className="truncate">{locationLabel}</span>
-              <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
+              {subscribed ? (
+                <Bell className="h-4 w-4 text-primary" />
+              ) : (
+                <BellOff className="h-4 w-4" />
+              )}
             </button>
-          )}
+          </div>
         </header>
 
         <h1 className="mt-5 font-display text-[clamp(2.5rem,9vw,3.5rem)] leading-[0.95] tracking-tight text-foreground">
