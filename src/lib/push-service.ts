@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Public VAPID Key (URL-safe base64 uncompressed public key)
-const VAPID_PUBLIC_KEY = "BO4imRW5SYfMtEUyfwMrrxvzJjuoThJ1FNqiUX3Z0C93Ajdrhdy0rX5iwvGBWHffmH3nP-NhVsF5XXbnHxsUnrg";
+const VAPID_PUBLIC_KEY = "BDmzAIqfbHB4PIEE77ZC0IqhY3LSJG-mL5bEMoknwg-DJ6sy8ydBNWJ3ffhMNvE-EUqQgKUCmL-HiJ1HuK3Ufqc";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
