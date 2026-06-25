@@ -55,22 +55,13 @@ function AuthPage() {
     setBusy(true);
     try {
       const target = window.location.origin + postAuthTarget;
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: target,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: target,
+        },
       });
-      if (result.error) {
-        // Fallback: try the Supabase client directly. If Google is enabled in
-        // the Supabase dashboard this will succeed even if Lovable's wrapper
-        // is unavailable.
-        const { error: fallbackError } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: target },
-        });
-        if (fallbackError) throw fallbackError;
-        return;
-      }
-      if (result.redirected) return;
-      navigate({ to: postAuthTarget as "/home" });
+      if (error) throw error;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
       setBusy(false);

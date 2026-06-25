@@ -7,14 +7,14 @@ export const Route = createFileRoute("/_authenticated")({
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
 
-    // Check if profile setup is complete (vibe is set)
+    // Check if profile setup is complete (age_verified is true)
     const { data: profile } = await supabase
       .from("profiles")
-      .select("vibe")
+      .select("age_verified")
       .eq("id", data.user.id)
       .maybeSingle();
 
-    if (!profile || !profile.vibe) {
+    if (!profile || !profile.age_verified) {
       throw redirect({ to: "/setup" });
     }
 

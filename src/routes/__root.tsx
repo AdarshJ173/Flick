@@ -72,10 +72,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#1a1d24" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      // Opaque black status bar (was `black-translucent`) — matches the midnight
-      // background so the OS bar blends in. Combined with `viewport-fit=cover`
-      // the app extends edge-to-edge under the status bar.
-      { name: "apple-mobile-web-app-status-bar-style", content: "black" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Flick" },
       { title: "Flick — Be here. Find people." },
       {

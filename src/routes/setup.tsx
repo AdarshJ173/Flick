@@ -93,6 +93,10 @@ function ProfileSetupPage() {
         .eq("id", data.user.id)
         .maybeSingle();
       if (p) {
+        if (p.age_verified) {
+          navigate({ to: "/home" });
+          return;
+        }
         setName(p.display_name || "");
         if (p.avatar_emoji && isDicebearUrl(p.avatar_emoji)) {
           setEmoji(p.avatar_emoji);
@@ -102,7 +106,7 @@ function ProfileSetupPage() {
           setEmoji(dicebearUrl(p.display_name || "flick"));
         }
         setVibe(p.vibe || "");
-        setAgeConfirmed(!!(p as any).age_verified);
+        setAgeConfirmed(!!p.age_verified);
       }
     })();
   }, [navigate]);

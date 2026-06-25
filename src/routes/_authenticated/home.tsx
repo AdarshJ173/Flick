@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FlickAvatar } from "@/components/flick/avatar";
+import { haptics } from "@/lib/haptics";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
@@ -78,7 +79,7 @@ function HomePage() {
       const { data, error } = await supabase.rpc("count_nearby_signals", {
         in_lat: p.lat,
         in_lng: p.lng,
-        in_search_radius_m: 2000,
+        in_search_radius_m: null,
       });
       if (!error && typeof data === "number") setNearbyCount(data);
     } catch {
@@ -529,64 +530,73 @@ function ComposerCard(props: {
       </h2>
 
       <div className="mt-6 -mx-5 overflow-x-auto px-5 [scrollbar-width:none]">
-        <div className="flex gap-2 pb-2">
-          {INTENTS.map((it) => {
-            const isActive = it.key === intent.key;
-            return (
-              <button
-                key={it.key}
-                onClick={() => setIntent(it)}
-                className={cn(
-                  "no-tap flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition active:scale-95 whitespace-nowrap",
-                  isActive
-                    ? "border-primary/40 bg-primary/15 text-primary"
-                    : "border-border bg-surface text-foreground",
-                )}
-              >
-                <it.icon className="h-4 w-4 shrink-0" /> {it.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+         <div className="flex gap-2 pb-2">
+           {INTENTS.map((it) => {
+             const isActive = it.key === intent.key;
+             return (
+               <button
+                 key={it.key}
+                 onClick={() => {
+                   haptics.light();
+                   setIntent(it);
+                 }}
+                 className={cn(
+                   "no-tap flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition active:scale-95 whitespace-nowrap",
+                   isActive
+                     ? "border-primary/40 bg-primary/15 text-primary"
+                     : "border-border bg-surface text-foreground",
+                 )}
+               >
+                 <it.icon className="h-4 w-4 shrink-0" /> {it.label}
+               </button>
+             );
+           })}
+         </div>
+       </div>
 
-      <textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value.slice(0, 140))}
-        placeholder={intent.prompt}
-        rows={2}
-        className="mt-5 w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
-      />
-      <div className="mt-1 text-right text-[11px] text-muted-foreground">{note.length}/140</div>
+       <textarea
+         value={note}
+         onChange={(e) => setNote(e.target.value.slice(0, 140))}
+         placeholder={intent.prompt}
+         rows={2}
+         className="mt-5 w-full resize-none rounded-2xl border border-border bg-surface p-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+       />
+       <div className="mt-1 text-right text-[11px] text-muted-foreground">{note.length}/140</div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <SliderCard
-          label="Radius"
-          value={`${radius < 1000 ? radius + " m" : (radius / 1000).toFixed(1) + " km"}`}
-          icon={<MapPin className="h-3.5 w-3.5" />}
-        >
-          <input
-            type="range"
-            min={200}
-            max={3000}
-            step={100}
-            value={radius}
-            onChange={(e) => setRadius(+e.target.value)}
-            className="w-full accent-[var(--color-primary)]"
-          />
-        </SliderCard>
-        <SliderCard label="For" value={`${duration} min`} icon={<Clock className="h-3.5 w-3.5" />}>
-          <input
-            type="range"
-            min={15}
-            max={180}
-            step={15}
-            value={duration}
-            onChange={(e) => setDuration(+e.target.value)}
-            className="w-full accent-[var(--color-primary)]"
-          />
-        </SliderCard>
-      </div>
+       <div className="mt-4 grid grid-cols-2 gap-3">
+         <SliderCard
+           label="Radius"
+           value={`${radius < 1000 ? radius + " m" : (radius / 1000).toFixed(1) + " km"}`}
+           icon={<MapPin className="h-3.5 w-3.5" />}
+         >
+           <input
+             type="range"
+             min={200}
+             max={3000}
+             step={100}
+             value={radius}
+             onChange={(e) => {
+               setRadius(+e.target.value);
+               haptics.light();
+             }}
+             className="w-full accent-[var(--color-primary)]"
+           />
+         </SliderCard>
+         <SliderCard label="For" value={`${duration} min`} icon={<Clock className="h-3.5 w-3.5" />}>
+           <input
+             type="range"
+             min={15}
+             max={180}
+             step={15}
+             value={duration}
+             onChange={(e) => {
+               setDuration(+e.target.value);
+               haptics.light();
+             }}
+             className="w-full accent-[var(--color-primary)]"
+           />
+         </SliderCard>
+       </div>
 
       <SlideButton onSwipe={onGoLive} disabled={posting} label="Flick it" />
       <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -770,9 +780,7 @@ function SlideButton({
     if (newX >= maxSlide * 0.95) {
       setIsDragging(false);
       setSlideX(maxSlide);
-      if (navigator.vibrate) {
-        navigator.vibrate([55]);
-      }
+      haptics.flick();
       onSwipe();
       setTimeout(() => {
         setSlideX(0);

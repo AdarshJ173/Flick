@@ -8,6 +8,7 @@ import { Compass, MapPin, Users, Hand } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FlickAvatar } from "@/components/flick/avatar";
+import { haptics } from "@/lib/haptics";
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: DiscoverPage,
@@ -59,7 +60,7 @@ function DiscoverPage() {
     const { data: signalsData, error: signalsError } = await supabase.rpc("get_nearby_signals", {
       in_lat: p.lat,
       in_lng: p.lng,
-      in_search_radius_m: 2000,
+      in_search_radius_m: null,
     });
     if (signalsError) {
       toast.error(signalsError.message);
@@ -69,27 +70,15 @@ function DiscoverPage() {
 
     // Fetch related profile details to display Trust info
     if (list.length > 0) {
-      const userIds = list
-        .map((s: any) => {
-          // Since get_nearby_signals might not return user_id, let's fetch matching signal owners
-          return s.user_id;
-        })
-        .filter(Boolean);
+      const userIds = list.map((s) => s.user_id).filter(Boolean);
 
-      // If user_id is not in list returned, we fetch them via signals table mapping
-      const { data: signalsOwners } = await supabase
-        .from("signals")
-        .select(
-          "id, user_id, profiles(display_name, avatar_emoji, vibe, photo_verified, linkedin_url, instagram_url, website_url, age_verified)",
-        )
-        .in(
-          "id",
-          list.map((s) => s.id),
-        );
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_emoji, vibe, photo_verified, linkedin_url, instagram_url, website_url, age_verified")
+        .in("id", userIds);
 
       const enriched = list.map((s) => {
-        const owner = signalsOwners?.find((o) => o.id === s.id);
-        const profile = owner?.profiles as any;
+        const profile = profiles?.find((p) => p.id === s.user_id) as any;
         let score = 25;
         if (profile) {
           if (profile.age_verified) score += 15;
@@ -100,7 +89,7 @@ function DiscoverPage() {
         }
         return {
           ...s,
-          user_id: owner?.user_id,
+          user_id: s.user_id,
           display_name: profile?.display_name || "Someone",
           avatar_emoji: profile?.avatar_emoji || "gradient-2",
           trustScore: score,
@@ -110,7 +99,14 @@ function DiscoverPage() {
           website_url: profile?.website_url,
         };
       });
-      setSignals(enriched as any);
+      const uniqueMap = new Map<string, any>();
+      enriched.forEach((item) => {
+        const existing = uniqueMap.get(item.user_id);
+        if (!existing || new Date(item.created_at) > new Date(existing.created_at)) {
+          uniqueMap.set(item.user_id, item);
+        }
+      });
+      setSignals(Array.from(uniqueMap.values()));
     } else {
       setSignals([]);
     }
@@ -160,6 +156,8 @@ function DiscoverPage() {
       const { data, error } = await supabase.rpc("wave_on_signal", { in_signal_id: signal.id });
       if (error) throw error;
 
+      haptics.success();
+
       // Update UI state
       setSignals((arr) => arr.map((s) => (s.id === signal.id ? { ...s, already_waved: true } : s)));
       if (selectedSignal?.id === signal.id) {
@@ -171,6 +169,7 @@ function DiscoverPage() {
         navigate({ to: "/match/$matchId", params: { matchId: data as string } });
       }
     } catch (err) {
+      haptics.error();
       toast.error(err instanceof Error ? err.message : "Couldn't send wave");
     } finally {
       setWaving(false);
@@ -274,7 +273,10 @@ function DiscoverPage() {
                       return (
                         <button
                           key={spot.id}
-                          onClick={() => setSelectedSignal(spot)}
+                          onClick={() => {
+                            haptics.light();
+                            setSelectedSignal(spot);
+                          }}
                           className="absolute z-20 group transition duration-300"
                           style={{
                             top: `${50 + latOffset * 42}%`,

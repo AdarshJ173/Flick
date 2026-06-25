@@ -116,7 +116,7 @@
      by individual app shells. Safe-area-bottom is handled at component level so
      the bottom nav can offset itself without affecting main scroll area. */
   body {
-    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-top: 0px;
   }
   ::selection {
     background: oklch(0.92 0.2 122 / 35%);

@@ -10,6 +10,7 @@ import { LivePulse } from "@/components/flick/live-pulse";
 import { FlickAvatar } from "@/components/flick/avatar";
 import { cn } from "@/lib/utils";
 import { ChatProfileSheet, type ChatProfileUser } from "@/components/flick/chat-profile-sheet";
+import { haptics } from "@/lib/haptics";
 
 export const Route = createFileRoute("/_authenticated/nearby")({
   component: NearbyPage,
@@ -47,7 +48,7 @@ function NearbyPage() {
     const { data, error } = await supabase.rpc("get_nearby_signals", {
       in_lat: p.lat,
       in_lng: p.lng,
-      in_search_radius_m: 2000,
+      in_search_radius_m: null,
     });
     if (error) {
       toast.error(error.message);
@@ -58,21 +59,17 @@ function NearbyPage() {
       setSignals([]);
       return;
     }
-    const { data: owners } = await supabase
-      .from("signals")
-      .select("id,user_id,profiles(display_name,avatar_emoji,vibe,photo_verified,age_verified)")
-      .in(
-        "id",
-        list.map((s) => s.id as string),
-      );
+    const userIds = list.map((s) => s.user_id as string).filter(Boolean);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id,display_name,avatar_emoji,vibe,photo_verified,age_verified")
+      .in("id", userIds);
+
     const enriched: NearbySignal[] = list.map((s) => {
-      const owner = (owners ?? []).find((o) => o.id === s.id) as
-        | { user_id: string; profiles: Record<string, unknown> | null }
-        | undefined;
-      const profile = (owner?.profiles as Record<string, unknown>) ?? {};
+      const profile = (profiles ?? []).find((p) => p.id === s.user_id) ?? {};
       return {
         id: s.id as string,
-        user_id: (owner?.user_id as string) ?? "",
+        user_id: (s.user_id as string) ?? "",
         intent: s.intent as string,
         note: (s.note as string | null) ?? null,
         place_label: (s.place_label as string | null) ?? null,
@@ -88,7 +85,14 @@ function NearbyPage() {
         age_verified: !!(profile.age_verified as boolean | undefined),
       };
     });
-    setSignals(enriched);
+    const uniqueMap = new Map<string, NearbySignal>();
+    enriched.forEach((item) => {
+      const existing = uniqueMap.get(item.user_id);
+      if (!existing || new Date(item.created_at) > new Date(existing.created_at)) {
+        uniqueMap.set(item.user_id, item);
+      }
+    });
+    setSignals(Array.from(uniqueMap.values()));
   }, []);
 
   useEffect(() => {
@@ -135,13 +139,18 @@ function NearbyPage() {
   async function wave(signal: NearbySignal) {
     if (signal.is_mine || signal.already_waved) return;
     const { data, error } = await supabase.rpc("wave_on_signal", { in_signal_id: signal.id });
-    if (error) return toast.error(error.message);
+    if (error) {
+      haptics.error();
+      return toast.error(error.message);
+    }
+    haptics.success();
     setSignals((arr) => arr.map((s) => (s.id === signal.id ? { ...s, already_waved: true } : s)));
     toast.success("It's mutual. Go say hi.", { duration: 3500 });
     if (data) navigate({ to: "/match/$matchId", params: { matchId: data as string } });
   }
 
   function openProfile(signal: NearbySignal) {
+    haptics.light();
     setSelectedProfile({
       id: signal.user_id,
       display_name: signal.display_name,
