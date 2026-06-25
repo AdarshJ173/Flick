@@ -4,7 +4,7 @@
   "description": "Broadcast that you're here and open. Find people nearby who said yes too.",
   "start_url": "/",
   "scope": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a1d24",
   "theme_color": "#1a1d24",
