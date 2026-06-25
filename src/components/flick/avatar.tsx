@@ -37,7 +37,7 @@ export function FlickAvatar({
           loading="lazy"
           decoding="async"
           onError={() => setImgFailed(true)}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover scale-108"
         />
       </div>
     );
@@ -83,7 +83,7 @@ function GradientAvatar({
           loading="lazy"
           decoding="async"
           onError={() => setImgFailed(true)}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover scale-108"
         />
       </div>
     );
@@ -169,7 +169,7 @@ function GradientAvatar({
               strokeWidth="3"
               strokeOpacity="0.12"
               fill="none"
-            />
+              />
             <circle cx="50" cy="50" r="20" fill="white" fillOpacity="0.08" />
             <circle cx="20" cy="20" r="12" fill="white" fillOpacity="0.15" />
           </>
@@ -211,7 +211,7 @@ function GradientAvatar({
         )}
       </svg>
       <div className="absolute inset-0.5 rounded-[inherit] bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-      <span className="relative z-10 font-display text-[0.45em] tracking-tight font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
+      <span className="relative z-10 font-display text-[0.50em] tracking-tight font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
         {initial}
       </span>
     </div>

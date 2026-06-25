@@ -348,13 +348,13 @@ function ProfilePage() {
                 setTempEmoji(emoji);
                 setShowAvatarEditor(true);
               }}
-              className="no-tap shrink-0 h-20 w-20 rounded-3xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 active:scale-95 transition-transform"
+              className="no-tap shrink-0 h-16 w-16 rounded-3xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 active:scale-95 transition-transform"
               title="Tap to change avatar"
             >
               <FlickAvatar
                 emoji={emoji}
                 name={name}
-                className="h-full w-full text-3xl shadow-sm"
+                className="h-full w-full text-2xl shadow-sm"
               />
             </button>
             <div className="flex-1 min-w-0 space-y-1">
