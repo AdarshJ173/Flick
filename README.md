@@ -1,7 +1,7 @@
 # ⚡ Flick — Ambient Social Layer for Physical Reality
 
 <p align="center">
-  <img src="public/Flick.png" alt="Flick Logo" width="120" style="border-radius: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  <img src="public/tlogo.svg" alt="Flick Logo" width="120" style="border-radius: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
 </p>
 
 <p align="center">
@@ -188,9 +188,4 @@ bun run build
 npm run build
 ```
 
----
 
-## 🤝 Lovable Sync Reminder
-
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Do not rewrite published git history (e.g., force pushing, rebasing, or squashing pushed commits) to prevent losing project history on Lovable's platform. Ensure all commits pushed to the main branch are functional and keep the build in a working state.
